@@ -1,14 +1,30 @@
 "use client";
 import { useState, useEffect } from "react";
+import { Ring, Stop, Product } from "@/types";
 
 export default function OrderPage(){
-  const [rings,setRings]=useState<any[]>([]);
-  const [stops,setStops]=useState<any[]>([]);
-  const [products,setProducts]=useState<any[]>([]);
+  const [rings,setRings]=useState<Ring[]>([]);
+  const [stops,setStops]=useState<Stop[]>([]);
+  const [products,setProducts]=useState<Product[]>([]);
   const [categories,setCategories]=useState<string[]>([]);
   const [selectedCategory,setSelectedCategory]=useState<string>("");
   const [productQuantities,setProductQuantities]=useState<{[key:string]:number}>({});
-  const [form,setForm]=useState<any>({
+  const [form,setForm]=useState<{
+    channel: string;
+    customer: {
+      name: string;
+      phone: string;
+      email: string;
+      org_name?: string;
+      reg_code?: string;
+    };
+    ring_id: string;
+    stop_id: string;
+    delivery_address?: string;
+    notes_customer?: string;
+    notes_internal?: string;
+    payment_method: string;
+  }>({
     channel:"veeb",
     customer:{ name:"", phone:"", email:"", org_name:"", reg_code:"" },
     ring_id:"", stop_id:"",

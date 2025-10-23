@@ -45,7 +45,7 @@ export async function POST(req: Request) {
         sku: customSku,
         name: productName,
         category: 'Kohandatud tooted',
-        uom: uom.toUpperCase() as any,
+        uom: uom.toUpperCase() as 'KG' | 'TK',
         active: true,
         catchWeight: uom.toLowerCase() === 'kg'
       }
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
       data: {
         orderId: orderId,
         productSku: customSku,
-        uom: uom.toUpperCase() as any,
+        uom: uom.toUpperCase() as 'KG' | 'TK',
         requestedQty: parseFloat(weight),
         packedWeight: parseFloat(weight),
         unitPrice: parseFloat(unitPrice),

@@ -126,7 +126,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ ok:true, orderId: order.id, duplicate }, { status: 200 });
-  } catch (e:any) {
+  } catch (e: unknown) {
     console.error(e);
     return NextResponse.json({ ok:false, error:"Server error" }, { status: 500 });
   }

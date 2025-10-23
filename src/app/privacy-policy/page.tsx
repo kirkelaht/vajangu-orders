@@ -15,7 +15,7 @@ export default function PrivacyPolicyPage() {
           <div className="prose prose-lg max-w-none">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">1. Üldsätted</h2>
             <p className="text-gray-700 mb-6">
-              Vajangu Perefarm OÜ (edaspidi "Ettevõte") kaitseb teie isikuandmeid ja järgib isikuandmete kaitse seadust. 
+              Vajangu Perefarm OÜ (edaspidi &quot;Ettevõte&quot;) kaitseb teie isikuandmeid ja järgib isikuandmete kaitse seadust. 
               See eeskiri selgitab, kuidas me kogume, kasutame ja kaitstame teie isikuandmeid.
             </p>
 
