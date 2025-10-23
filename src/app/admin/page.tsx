@@ -599,16 +599,26 @@ export default function AdminPage() {
   }
 
   // Authentication functions
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'vajangu2025';
-    
-    if (password === adminPassword) {
-      setIsAuthenticated(true);
-      setLoginError('');
-      sessionStorage.setItem('vajangu_admin_auth', 'true');
-    } else {
-      setLoginError('Vale parool!');
+    try {
+      const res = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      
+      const result = await res.json();
+      
+      if (result.success) {
+        setIsAuthenticated(true);
+        setLoginError('');
+        sessionStorage.setItem('vajangu_admin_auth', 'true');
+      } else {
+        setLoginError('Vale parool!');
+      }
+    } catch (error) {
+      setLoginError('Viga sisselogimisel');
     }
   };
 
