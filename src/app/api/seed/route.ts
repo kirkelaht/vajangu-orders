@@ -95,7 +95,9 @@ export async function POST() {
               name: 'Järva-Jaani',
               meetingPoint: 'Järva-Jaani keskus, parkla',
               ringId: ring.id,
-              sortOrder: 1
+              sortOrder: 1,
+              timeStart: new Date('2025-11-02T10:00:00Z'),
+              timeEnd: new Date('2025-11-02T11:00:00Z')
             }
           }),
           prisma.stop.create({
@@ -103,7 +105,9 @@ export async function POST() {
               name: 'Kõmsi',
               meetingPoint: 'Kõmsi küla, bussipeatus',
               ringId: ring.id,
-              sortOrder: 2
+              sortOrder: 2,
+              timeStart: new Date('2025-11-02T11:30:00Z'),
+              timeEnd: new Date('2025-11-02T12:30:00Z')
             }
           })
         ]);
@@ -115,7 +119,9 @@ export async function POST() {
               name: 'Kose',
               meetingPoint: 'Kose keskus, parkla',
               ringId: ring.id,
-              sortOrder: 1
+              sortOrder: 1,
+              timeStart: new Date('2025-11-09T10:00:00Z'),
+              timeEnd: new Date('2025-11-09T11:00:00Z')
             }
           }),
           prisma.stop.create({
@@ -123,7 +129,9 @@ export async function POST() {
               name: 'Haapsalu',
               meetingPoint: 'Haapsalu keskus, parkla',
               ringId: ring.id,
-              sortOrder: 2
+              sortOrder: 2,
+              timeStart: new Date('2025-11-09T11:30:00Z'),
+              timeEnd: new Date('2025-11-09T12:30:00Z')
             }
           })
         ]);
@@ -135,7 +143,9 @@ export async function POST() {
               name: 'Rakke',
               meetingPoint: 'Rakke keskus, parkla',
               ringId: ring.id,
-              sortOrder: 1
+              sortOrder: 1,
+              timeStart: new Date('2025-11-16T10:00:00Z'),
+              timeEnd: new Date('2025-11-16T11:00:00Z')
             }
           }),
           prisma.stop.create({
@@ -143,7 +153,9 @@ export async function POST() {
               name: 'Viljandi',
               meetingPoint: 'Viljandi keskus, parkla',
               ringId: ring.id,
-              sortOrder: 2
+              sortOrder: 2,
+              timeStart: new Date('2025-11-16T11:30:00Z'),
+              timeEnd: new Date('2025-11-16T12:30:00Z')
             }
           })
         ]);
@@ -155,7 +167,9 @@ export async function POST() {
               name: 'Aravete',
               meetingPoint: 'Aravete keskus, parkla',
               ringId: ring.id,
-              sortOrder: 1
+              sortOrder: 1,
+              timeStart: new Date('2025-11-23T10:00:00Z'),
+              timeEnd: new Date('2025-11-23T11:00:00Z')
             }
           }),
           prisma.stop.create({
@@ -163,7 +177,9 @@ export async function POST() {
               name: 'Maardu',
               meetingPoint: 'Maardu keskus, parkla',
               ringId: ring.id,
-              sortOrder: 2
+              sortOrder: 2,
+              timeStart: new Date('2025-11-23T11:30:00Z'),
+              timeEnd: new Date('2025-11-23T12:30:00Z')
             }
           })
         ]);
@@ -175,7 +191,9 @@ export async function POST() {
               name: 'Koeru',
               meetingPoint: 'Koeru keskus, parkla',
               ringId: ring.id,
-              sortOrder: 1
+              sortOrder: 1,
+              timeStart: new Date('2025-11-30T10:00:00Z'),
+              timeEnd: new Date('2025-11-30T11:00:00Z')
             }
           }),
           prisma.stop.create({
@@ -183,7 +201,9 @@ export async function POST() {
               name: 'Vändra',
               meetingPoint: 'Vändra keskus, parkla',
               ringId: ring.id,
-              sortOrder: 2
+              sortOrder: 2,
+              timeStart: new Date('2025-11-30T11:30:00Z'),
+              timeEnd: new Date('2025-11-30T12:30:00Z')
             }
           })
         ]);
@@ -195,7 +215,9 @@ export async function POST() {
               name: 'Viru-Nigula',
               meetingPoint: 'Kodune tarne',
               ringId: ring.id,
-              sortOrder: 1
+              sortOrder: 1,
+              timeStart: new Date('2025-12-07T10:00:00Z'),
+              timeEnd: new Date('2025-12-07T11:00:00Z')
             }
           }),
           prisma.stop.create({
@@ -203,7 +225,9 @@ export async function POST() {
               name: 'Sonda',
               meetingPoint: 'Kodune tarne',
               ringId: ring.id,
-              sortOrder: 2
+              sortOrder: 2,
+              timeStart: new Date('2025-12-07T11:30:00Z'),
+              timeEnd: new Date('2025-12-07T12:30:00Z')
             }
           })
         ]);
