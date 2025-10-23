@@ -1,0 +1,16 @@
+sku,name,category,uom,catch_weight,active
+PORK-001,Seahakkliha,Värske sealiha,kg,true,true
+PORK-002,Sealiha kotlet,Värske sealiha,kg,true,true
+PORK-003,Sealiha kaelakarbonaad,Värske sealiha,kg,true,true
+PORK-004,Sealiha seljakarbonaad,Värske sealiha,kg,true,true
+PORK-005,Sealiha hakkliha,Värske sealiha,kg,true,true
+PORK-006,Sealiha siseelundid,Värske sealiha,kg,true,true
+SAUS-001,Ahjuvorst,Valmistooted,tk,false,true
+SAUS-002,Suitsuvorst,Valmistooted,kg,true,true
+SAUS-003,Verivorst,Hooajalised ja eritooted,tk,false,true
+SMOK-001,Suitsuliha,Valmistooted,kg,true,true
+CANN-001,Sealihakonserv,Valmistooted,tk,false,true
+PAST-001,Seamaksa pasteet,Valmistooted,tk,false,true
+SALT-001,Puhastatud seasooled,Hooajalised ja eritooted,kg,true,true
+SHAS-001,Šašlõkid,Kulinaariatooted,tk,false,true
+

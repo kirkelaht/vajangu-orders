@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+enum Segment { 
+  RETAIL 
+  RESTAURANT 
+  WHOLESALE 
+}
+
+enum Channel { 
+  WEB 
+  PHONE 
+  FACEBOOK 
+  EMAIL 
+}
+
+enum UOM { 
+  KG 
+  TK 
+}
+
+enum DeliveryType { 
+  STOP 
+  HOME 
+}
+
+enum PaymentMethod { 
+  CASH 
+  TRANSFER 
+}
+
+enum PaymentStatus { 
+  UNPAID 
+  PARTIAL 
+  PAID 
+  CREDIT 
+}
+
+enum OrderStatus { 
+  NEW 
+  ACCEPTED 
+  FULFILLING 
+  READY 
+  ON_THE_WAY 
+  DELIVERED 
+  INVOICED 
+  CANCELLED 
+  CREDIT 
+}
+
+enum RingStatus { 
+  OPEN 
+  LOCKED 
+  DONE 
+}
+
+model Customer {
+  id           String   @id @default(cuid())
+  name         String
+  orgName      String?
+  regCode      String?
+  vat          String?
+  phone        String
+  email        String   @unique
+  segment      Segment  @default(RETAIL)
+  consentEmail Boolean  @default(false)
+  consentSms   Boolean  @default(false)
+  orders       Order[]
+  createdAt    DateTime @default(now())
+}
+
+model Ring {
+  id             String     @id @default(cuid())
+  ringDate       DateTime
+  region         String
+  driver         String?
+  visibleFrom    DateTime
+  visibleTo      DateTime
+  cutoffAt       DateTime
+  capacityOrders Int?
+  capacityKg     Decimal?
+  status         RingStatus  @default(OPEN)
+  stops          Stop[]
+  orders         Order[]
+}
+
+model Stop {
+  id           String   @id @default(cuid())
+  ringId       String
+  ring         Ring     @relation(fields: [ringId], references: [id])
+  name         String
+  meetingPoint String
+  timeStart    DateTime
+  timeEnd      DateTime
+  sortOrder    Int
+  orders       Order[]
+}
+
+model Product {
+  sku         String     @id
+  name        String
+  category    String
+  uom         UOM
+  catchWeight Boolean    @default(false)
+  active      Boolean    @default(true)
+  priceItems  PriceItem[]
+  orderLines  OrderLine[]
+}
+
+model PriceList {
+  id        String     @id @default(cuid())
+  name      String
+  segment   Segment
+  validFrom DateTime
+  validTo   DateTime?
+  items     PriceItem[]
+}
+
+model PriceItem {
+  id          String   @id @default(cuid())
+  priceListId String
+  priceList   PriceList @relation(fields: [priceListId], references: [id])
+  productSku  String
+  product     Product  @relation(fields: [productSku], references: [sku])
+  unitPrice   Decimal
+}
+
+model Order {
+  id            String        @id @default(cuid())
+  createdAt     DateTime      @default(now())
+  channel       Channel
+  customerId    String
+  customer      Customer      @relation(fields: [customerId], references: [id])
+  ringId        String
+  ring          Ring          @relation(fields: [ringId], references: [id])
+  stopId        String
+  stop          Stop          @relation(fields: [stopId], references: [id])
+  deliveryType  DeliveryType
+  deliveryAddress String?
+  status        OrderStatus   @default(NEW)
+  notesCustomer String?
+  notesInternal String?
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus @default(UNPAID)
+  invoiceId     String?
+  invoiceNumber String?       @unique
+  invoicedAt    DateTime?
+  invoiceTotal  Decimal?
+  taxRate       Decimal?
+  pickedBy      String?
+  deliveredBy   String?
+  lines         OrderLine[]
+}
+
+model OrderLine {
+  id                  String   @id @default(cuid())
+  orderId             String
+  order               Order    @relation(fields: [orderId], references: [id])
+  productSku          String
+  product             Product  @relation(fields: [productSku], references: [sku])
+  uom                 UOM
+  requestedQty        Decimal
+  packedQty           Decimal?
+  packedWeight        Decimal?
+  unitPrice           Decimal?
+  lineTotal           Decimal?
+  substitutionAllowed Boolean  @default(false)
+  substitutionSku     String?
+}

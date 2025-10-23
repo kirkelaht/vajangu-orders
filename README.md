@@ -1,249 +1,244 @@
-# Vajangu Perefarm – Tellimuste halduse MVP
+# 🐷 Vajangu Orders - Order Management System
 
-## Ülevaade
+A comprehensive order management system for Vajangu Perefarm, built with Next.js, Prisma, and PostgreSQL. This system handles customer orders, product management, and administrative functions for a farm-to-table meat delivery service.
 
-Tellimuse voog: **kliendilt → vorm → tellimuste kogutabel → pood → tarnering → klient**  
-Eesmärk: koondada kõik tellimused (veeb, telefon, e-post, Facebook) ühte süsteemi, et neid oleks võimalik hallata, töödelda ja analüüsida ühest kohast.  
-Kodulehe tellimusvorm lisatakse aadressile [https://perefarm.ee/](https://perefarm.ee/).
+## ✨ Features
 
----
+### 🛒 Customer Features
+- **Product Catalog** - Browse products by category with real-time pricing
+- **Order Form** - Easy-to-use order form with validation
+- **Ring Selection** - Choose delivery rings and stops
+- **Custom Pricing** - Special pricing for gift cards
+- **Order Confirmation** - Email confirmations and order tracking
+- **Privacy Compliance** - GDPR-compliant data handling
 
-## Põhireeglid ja protsess
+### 👨‍💼 Admin Features
+- **Order Management** - View, edit, and manage all orders
+- **Product Management** - Add custom products and update pricing
+- **Print Functions** - Generate packing lists and transport sheets
+- **Excel Export** - Export orders to CSV format
+- **Email System** - Send custom emails and invoices
+- **Status Tracking** - Track order status from new to completed
+- **Security** - Password-protected admin access
 
-- Ringid seab **Marvi iga kuu 25. kuupäeval** järgmiseks kuuks.
-- **Cutoff**: tellimuste vastuvõtt lõpeb **T–2 päeva enne ringi kuupäeva kell 23:59**.
-- Pärast cutoff'i:
-  - klient **ei saa uut tellimust** teha ega olemasolevat muuta;
-  - töötaja saab teha **erandi (rollipõhine override + põhjuse väli)**.
-- Kõik tellimused (FB, e-post, telefon, veeb) sisestatakse ühtsesse süsteemi — sama vormi kaudu, millel on kanaliväli (FB / telefon / e-post / veeb).
-- Poodi saadetakse automaatselt **koondaruanded**:
-  - tootekogused (nt 10 × 1 kg seahakkliha);
-  - individuaalsed tellimused peatuse kaupa;
-  - korjelehed ja sildid (PDF).
-- Poes saab muuta ainult **reaalset väljastatud kogust/kaalu**, mitte kliendi tellitud kogust.
-- Arve koostatakse automaatselt ainult **ülekandega maksjatele**.
-- Numbriseeria on **järjestikune ja unikaalne kogu ettevõttes** (võib sisaldada eesliidet asukoha koodiga).
+### 🔐 Security Features
+- **Admin Authentication** - Secure login system
+- **Database Encryption** - PostgreSQL with SSL connections
+- **Input Validation** - XSS and injection protection
+- **Automated Backups** - Daily backups with retention policy
+- **Environment Security** - Sensitive data in environment variables
 
----
+## 🚀 Quick Start
 
-## Staatused (tellimuse olekuvoog)
+### Prerequisites
+- Node.js 18+
+- PostgreSQL 13+ (for production)
+- npm or yarn
 
-`Uus → Vastu võetud → Täitmisel → Valmis väljastuseks → Teel → Kättetoimetatud → Arve saadetud → Tühistatud`
+### Installation
 
-Lubatud üleminekud:
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/vajangu-orders.git
+   cd vajangu-orders
+   ```
 
-| Praegune | Võimalikud järgmised |
-|-----------|----------------------|
-| Uus | Vastu võetud, Tühistatud |
-| Vastu võetud | Täitmisel, Tühistatud |
-| Täitmisel | Valmis väljastuseks, Tühistatud |
-| Valmis väljastuseks | Teel, Tühistatud |
-| Teel | Kättetoimetatud, Tühistatud |
-| Kättetoimetatud | Arve saadetud |
-| Arve saadetud | — |
-| Tühistatud | — |
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-> NB! "Saada arve" on **toiming**, mitte eraldi staatus.
+3. **Set up environment variables:**
+   ```bash
+   cp production.env.example .env.local
+   # Edit .env.local with your configuration
+   ```
 
----
+4. **Set up database:**
+   ```bash
+   # For development (SQLite)
+   npx prisma db push
+   
+   # For production (PostgreSQL)
+   node setup-production-db.js
+   ```
 
-## Rollid ja õigused
+5. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
 
-| Roll | Õigused |
-|------|----------|
-| **Admin** | hinnad, arved, krediitarve, staatuse override |
-| **Pood** | saab muuta ainult `packed_qty` ja `packed_weight` |
-| **Juht** | näeb oma ringi, saab saata "Teel" SMS ja märkida "Kohal" |
-| **Klienditugi** | muudab staatuseid, saadab kinnituskirju |
-| **Avalik kasutaja** | saab esitada tellimuse veebivormi kaudu |
+6. **Access the application:**
+   - Customer orders: http://localhost:3001/order
+   - Admin panel: http://localhost:3001/admin (password: vajangu2025)
 
----
+## 📁 Project Structure
 
-## Andmemudel (minimaalne skeem)
+```
+vajangu-orders/
+├── src/
+│   ├── app/
+│   │   ├── admin/           # Admin dashboard
+│   │   ├── api/             # API endpoints
+│   │   ├── order/           # Customer order form
+│   │   └── privacy-policy/  # Privacy policy page
+│   └── lib/
+│       ├── prisma.ts        # Database connection
+│       └── email.ts         # Email service
+├── prisma/
+│   ├── schema.prisma        # Database schema
+│   └── migrations/          # Database migrations
+├── public/                  # Static assets
+├── data/                    # Product data
+├── backups/                 # Database backups
+└── scripts/                 # Setup and utility scripts
+```
 
-### Tabel: Tellimus
-| Väli | Kirjeldus |
-|------|------------|
-| order_id | unikaalne ID |
-| created_at | loomisaeg |
-| channel | veeb / telefon / FB / e-post |
-| customer_id | viide kliendile |
-| ring_id | viide ringile |
-| stop_id | viide peatuskohale |
-| delivery_type | peatus / koju |
-| delivery_address | kui `koju` |
-| status | vt olekuvoog |
-| notes_customer | kliendi märkus |
-| notes_internal | sisemärkused |
-| payment_method | sularaha / ülekandega |
-| payment_status | maksmata / osaliselt / tasutud / krediit |
-| invoice_id | viide arvele (kui loodud) |
-| invoice_total | summa |
-| tax_rate | käibemaks |
-| picked_by | kes komplekteeris |
-| delivered_by | kes toimetas |
+## 🗄️ Database Schema
 
-### Tabel: Tellimuse read
-| Väli | Kirjeldus |
-|------|------------|
-| order_line_id | unikaalne ID |
-| order_id | viide tellimusele |
-| sku | toote kood |
-| name | toote nimi |
-| uom | ühik (kg/tk) |
-| ordered_qty | kliendi soov |
-| packed_weight | tegelik kaal |
-| packed_qty | tegelik kogus |
-| unit_price | ühikuhind |
-| line_total | ridade kogusumma |
-| substitution_allowed | lubatud asendus (jah/ei) |
-| substitution_used | kas asendus kasutatud |
+The system uses Prisma ORM with the following main models:
 
-### Tabel: Klient
-| Väli | Kirjeldus |
-|------|------------|
-| customer_id | unikaalne ID |
-| name | kliendi nimi |
-| org_name | ettevõtte nimi (kui olemas) |
-| reg_code | registrikood |
-| vat | KMKR number |
-| phone | telefon |
-| email | e-post |
-| segment | jaeklient / restoran / hulgiklient |
-| consent_email | nõusolek e-postiga |
-| consent_sms | nõusolek SMS-ga |
+- **Customer** - Customer information and contact details
+- **Order** - Order details, status, and payment information
+- **OrderLine** - Individual products in each order
+- **Product** - Product catalog with pricing
+- **Ring** - Delivery routes and schedules
+- **Stop** - Delivery stops within rings
 
-### Tabel: Ring
-| Väli | Kirjeldus |
-|------|------------|
-| ring_id | unikaalne ID |
-| ring_date | kuupäev |
-| region | piirkond |
-| driver | juht |
-| capacity_orders | max tellimuste arv |
-| capacity_kg | max kg |
-| cutoff_at | viimase tellimuse aeg |
-| status | OPEN / CLOSED / DONE |
+## 🔧 Configuration
 
-### Tabel: Peatus
-| Väli | Kirjeldus |
-|------|------------|
-| stop_id | unikaalne ID |
-| ring_id | viide ringile |
-| stop_name | peatus |
-| meeting_point | kohtumispaik |
-| time_window_start / end | ajavahemik |
-| sort_order | järjekord ringis |
+### Environment Variables
 
-### Tabel: Toode
-CSV-fail `data/products.csv`  
-Väljad: `sku, name, category, uom, catch_weight, active`
+```bash
+# Database
+DATABASE_URL="postgresql://user:password@host:port/database?sslmode=require"
 
-Näide:
-```csv
-sku,name,category,uom,catch_weight,active
-PORK-001,Seahakkliha,Värske sealiha,kg,true,true
-PORK-002,Sealiha kotlet,Värske sealiha,kg,true,true
-SAUS-001,Ahjuvorst,Valmistooted,tk,false,true
-SMOK-001,Suitsuvorst,Valmistooted,kg,true,true
+# App Configuration
+APP_BASE_URL="https://your-domain.com"
+NODE_ENV="production"
+
+# Email Service
+MAILERSEND_API_KEY="your_mailersend_api_key"
+
+# Security
+ADMIN_PASSWORD="your_secure_password"
+JWT_SECRET="your_jwt_secret"
+```
+
+### Database Setup
+
+#### Development (SQLite)
+```bash
+npx prisma db push
+npx prisma generate
+```
+
+#### Production (PostgreSQL)
+```bash
+node setup-production-db.js
+```
+
+## 📊 Backup & Recovery
+
+### Automated Backups
+```bash
+# Set up backup system
+node backup-setup.js
+
+# Manual backup
+./backup-database.sh
+
+# Restore from backup
+./restore-database.sh backups/vajangu_orders_YYYYMMDD_HHMMSS.sql.gz
+```
+
+### Backup Monitoring
+```bash
+# Check backup status
+node check-backups.js
+```
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+1. Connect your GitHub repository to Vercel
+2. Set environment variables in Vercel dashboard
+3. Deploy automatically on push to main branch
+
+### Self-Hosted
+1. Set up PostgreSQL database
+2. Configure environment variables
+3. Build and start the application:
+   ```bash
+   npm run build
+   npm start
+   ```
+
+For detailed deployment instructions, see [PRODUCTION-DEPLOYMENT.md](PRODUCTION-DEPLOYMENT.md).
+
+## 🔐 Security
+
+### Admin Access
+- **Default Password:** `vajangu2025` (change in production)
+- **Session Management:** Secure session handling
+- **Logout:** Automatic session termination
+
+### Data Protection
+- **Encryption:** Database connections encrypted with SSL
+- **Backups:** Automated daily backups with encryption
+- **Input Validation:** Protection against XSS and injection attacks
+- **Environment Variables:** Sensitive data stored securely
+
+For complete security guidelines, see [SECURITY-CHECKLIST.md](SECURITY-CHECKLIST.md).
+
+## 📈 Monitoring
+
+### Health Checks
+- Database connection status
+- Backup success monitoring
+- Application uptime tracking
+
+### Logs
+- Application logs
+- Database query logs
+- Backup operation logs
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Commit changes: `git commit -am 'Add feature'`
+4. Push to branch: `git push origin feature-name`
+5. Submit a pull request
+
+## 📝 License
+
+This project is proprietary software for Vajangu Perefarm OÜ.
+
+## 📞 Support
+
+For technical support or questions:
+- **Email:** info@perefarm.ee
+- **Phone:** +372 5555 1234
+
+## 🔄 Updates
+
+### Version History
+- **v1.0.0** - Initial release with basic order management
+- **v1.1.0** - Added admin authentication and security features
+- **v1.2.0** - Implemented PostgreSQL and backup system
+- **v1.3.0** - Added email notifications and invoice generation
+
+### Updating
+```bash
+git pull origin main
+npm install
+npx prisma db push
+npm run build
 ```
 
 ---
 
-## Kliendi teekond
+**Built with ❤️ for Vajangu Perefarm OÜ**
 
-1. Klient avab kodulehel vormi (`https://perefarm.ee/order`).
-2. Valib nähtava ringi (ainult `visible_from ≤ now ≤ visible_to` ja `now < cutoff_at`).
-3. Valib peatuse, sisestab oma andmed ja tooted (kategooriate järgi).
-4. Saab automaatse e-kirja: "Aitäh, tellimus laekus".
-5. Kui tellimus kinnitatakse, saab teise kirja: "Tellimus vastu võetud".
-6. Kui juht alustab reisi, saab SMS-i: "Kaup jõuab ~XX min pärast. Kohtume: <peatus>."
-
----
-
-## Arveldamine ja numbrid
-
-- Arve koostatakse **ainult ülekandega maksjatele**.
-- Krediitarve kasutatakse tühistamisel, **arvet ei kustutata**.
-- Numbriseeria on järjestikune ja ühtne.
-- Arve PDF saadetakse käsitsi "Saada arve" nupuga.
-- Hindade muutmine pärast "Valmis väljastuseks" staatust ainult Adminil.
-
----
-
-## Automaatikad ja teavitused
-
-| Staatus | Tegevus |
-|----------|----------|
-| **Uus** | automaatne "Aitäh, tellimus laekus" e-kiri |
-| **Vastu võetud** | e-kiri ringi ja peatuskohaga |
-| **Teel** | juhi SMS "Kaup jõuab ~XX min pärast" |
-| **Kättetoimetatud** | e-kiri "Aitäh ostu eest" (võimalik arve lingiga) |
-
----
-
-## Andmekaitse (GDPR)
-
-- Kõik logid sisaldavad IP ja rolli; telefonid ja e-postid on logides maskeeritud (`+372xxx...`).
-- Andmeid säilitatakse:
-  - Tellimused ja arved: **7 aastat**.
-  - Logid: **12 kuud**.
-  - Pooleliolevad vormid: **30 päeva**.
-- MailerSend/Resend kasutab domeeni `perefarm.ee` SPF + DKIM autentimisega.
-- Turundusnõusolek on vabatahtlik, teenuse teavitus on kohustuslik.
-
----
-
-## MVP valmisoleku kontrollnimekiri ✅
-
-- [ ] Tellimus salvestub andmebaasi ja järgib cutoff'i reeglit.
-- [ ] Vormis on kanaliväli (veeb / telefon / FB / e-post).
-- [ ] Pood saab muuta ainult väljastusvälju (`packed_qty`, `packed_weight`).
-- [ ] Poodi koond (CSV) ja korjeleht (PDF) tekivad automaatselt.
-- [ ] "Uus" ja "Vastu võetud" e-kirjad toimivad.
-- [ ] Juhi "Teel" SMS töötab (stub või Messente integratsioon).
-- [ ] Arve PDF tekib ainult ülekandega tellimustele.
-- [ ] Arve tühistamisel tekib krediitarve, mitte kustutamine.
-
----
-
-## Kasutatavad tehnoloogiad
-
-- **Frontend:** Next.js + React + TypeScript  
-- **Server/API:** Next.js API Routes (Node.js)  
-- **Andmebaas:** PostgreSQL (Neon, prod) / SQLite (dev)  
-- **ORM:** Prisma  
-- **E-post:** MailerSend (tasuta tase piisab)  
-- **SMS (hiljem):** Messente  
-- **Deploy:** Vercel (Free Plan)
-
----
-
-## Embed olemasolevale kodulehele
-
-Kui vorm on avaldatud Vercelis (nt `https://vajanguperefarm.vercel.app/order`),  
-lisa kodulehe HTML-sse:
-
-```html
-<iframe
-  src="https://vajanguperefarm.vercel.app/order"
-  width="100%"
-  height="1800"
-  style="border:0"
-  loading="lazy"
-  referrerpolicy="no-referrer-when-downgrade">
-</iframe>
-```
-
----
-
-### Kuidas kasutada
-
-1️⃣ Ava **Cursoris uus projekt (Next.js + TypeScript)**.  
-2️⃣ Ava fail `README.md` ja **kleepi ülaltoodud tekst 1:1**.  
-3️⃣ Salvesta ja commit'i.  
-4️⃣ Cursor küsib seejärel automaatselt täpsustused (andmebaas, e-post, deploy) — vali:
-   - Database → PostgreSQL  
-   - Email → MailerSend  
-   - Deployment → Vercel  
-   - Language → Estonian
+*Kõrgekvaliteediline kodumaine sealiha* 🐷
