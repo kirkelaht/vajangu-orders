@@ -2,6 +2,16 @@
 import { useState, useEffect } from "react";
 import { Ring, Stop, Product } from "@/types";
 
+// Form-specific order line type
+interface FormOrderLine {
+  sku: string;
+  name: string;
+  uom: string;
+  ordered_qty: number;
+  substitution_allowed: boolean;
+  unit_price: number;
+}
+
 export default function OrderPage(){
   const [rings,setRings]=useState<Ring[]>([]);
   const [stops,setStops]=useState<Stop[]>([]);
@@ -24,6 +34,7 @@ export default function OrderPage(){
     notes_customer?: string;
     notes_internal?: string;
     payment_method: string;
+    order_lines: FormOrderLine[];
   }>({
     channel:"veeb",
     customer:{ name:"", phone:"", email:"", org_name:"", reg_code:"" },
@@ -49,9 +60,9 @@ export default function OrderPage(){
     fetch("/api/products").then(r=>r.json()).then(j=>{
       if(j.ok) {
         // Filter out custom products from customer view
-        const regularProducts = j.items.filter((p:any) => p.category !== 'Kohandatud tooted');
+        const regularProducts = j.items.filter((p: Product) => p.category !== 'Kohandatud tooted');
         setProducts(regularProducts);
-        const cats = [...new Set(regularProducts.map((p:any)=>p.category))] as string[];
+        const cats = [...new Set(regularProducts.map((p: Product)=>p.category))] as string[];
         
         // Sort categories with custom order
         const sortedCats = cats.sort((a, b) => {
@@ -135,33 +146,33 @@ export default function OrderPage(){
   });
   
   // Check if selected ring is for home delivery
-  const selectedRing = rings.find((r:any) => r.id === form.ring_id);
+  const selectedRing = rings.find((r: Ring) => r.id === form.ring_id);
   const isHomeDelivery = selectedRing?.region === 'Viru-Nigula-Sonda ring';
 
   function addProduct(sku:string, name:string, uom:string, quantity:number = 1, price:number = 0){
-    const existing = form.order_lines.find((l:any)=>l.sku===sku);
+    const existing = form.order_lines.find((l: FormOrderLine)=>l.sku===sku);
     if(existing){
-      setForm({...form, order_lines: form.order_lines.map((l:any)=>l.sku===sku ? {...l, ordered_qty: l.ordered_qty + quantity} : l)});
+      setForm({...form, order_lines: form.order_lines.map((l: FormOrderLine)=>l.sku===sku ? {...l, ordered_qty: l.ordered_qty + quantity} : l)});
     } else {
       setForm({...form, order_lines: [...form.order_lines, {sku, name, uom, ordered_qty: quantity, substitution_allowed: false, unit_price: price}]});
     }
   }
 
   function removeProduct(sku:string){
-    setForm({...form, order_lines: form.order_lines.filter((l:any)=>l.sku!==sku)});
+    setForm({...form, order_lines: form.order_lines.filter((l: FormOrderLine)=>l.sku!==sku)});
   }
 
   function updateQuantity(sku:string, qty:number){
-    setForm({...form, order_lines: form.order_lines.map((l:any)=>l.sku===sku ? {...l, ordered_qty: qty} : l)});
+    setForm({...form, order_lines: form.order_lines.map((l: FormOrderLine)=>l.sku===sku ? {...l, ordered_qty: qty} : l)});
   }
 
-  async function submit(e:any){
+  async function submit(e: React.FormEvent){
     e.preventDefault(); 
     if(form.order_lines.length === 0){
       alert("Valige vähemalt üks toode!");
       return;
     }
-    if(isHomeDelivery && !form.notes_customer.trim()){
+    if(isHomeDelivery && !form.notes_customer?.trim()){
       alert("Koduse tarne puhul tuleb sisestada tarneaadress!");
       return;
     }
@@ -272,7 +283,7 @@ export default function OrderPage(){
                     <select className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent" value={form.ring_id}
                       onChange={e=>setForm({...form, ring_id:e.target.value, stop_id:""})}>
                       <option value="">Vali ring</option>
-                      {rings.map((r:any)=><option key={r.id} value={r.id}>
+                      {rings.map((r: Ring)=><option key={r.id} value={r.id}>
                         {r.region} — {new Date(r.ringDate).toLocaleDateString("et-EE")}
                       </option>)}
                     </select>
@@ -285,7 +296,7 @@ export default function OrderPage(){
                     <select className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent" value={form.stop_id}
                       onChange={e=>setForm({...form, stop_id:e.target.value})}>
                       <option value="">{isHomeDelivery ? "Vali piirkond" : "Vali peatus"}</option>
-                      {stops.map((s:any)=><option key={s.id} value={s.id}>
+                      {stops.map((s: Stop)=><option key={s.id} value={s.id}>
                         {isHomeDelivery ? s.name : `${s.name} (${s.meetingPoint})`}
                       </option>)}
                     </select>
@@ -340,7 +351,7 @@ export default function OrderPage(){
                   <div className="mb-6">
                     <h4 className="font-semibold text-gray-800 mb-4">{selectedCategory}</h4>
                     <div className="grid grid-cols-1 gap-4">
-                      {categoryProducts.map((p:any)=>(
+                      {categoryProducts.map((p: Product)=>(
                         <div key={p.sku} className="flex items-center space-x-4 p-4 border border-gray-300 rounded-lg">
                           <div className="flex-1">
                             <div className="flex items-center justify-between">
@@ -365,7 +376,7 @@ export default function OrderPage(){
                                 </div>
                               ) : (
                                 <span className="text-lg font-bold text-green-600">
-                                  {p.currentPrice ? `${parseFloat(p.currentPrice).toFixed(2)}€` : 'Hind puudub'}
+                                  {p.currentPrice ? `${p.currentPrice.toFixed(2)}€` : 'Hind puudub'}
                                 </span>
                               )}
                             </div>
@@ -407,7 +418,7 @@ export default function OrderPage(){
                                 />
                                 <button 
                                   type="button" 
-                                  onClick={()=>addProduct(p.sku, p.name, p.uom, productQuantities[p.sku] || 1, parseFloat(p.currentPrice) || 0)}
+                                  onClick={()=>addProduct(p.sku, p.name, p.uom, productQuantities[p.sku] || 1, p.currentPrice || 0)}
                                   className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors">
                                   Lisa
                                 </button>
@@ -425,18 +436,18 @@ export default function OrderPage(){
                   <div>
                     <h4 className="font-semibold text-gray-800 mb-4">Valitud tooted</h4>
                     <div className="space-y-3">
-                      {form.order_lines.map((line:any)=>(
+                      {form.order_lines.map((line: FormOrderLine)=>(
                         <div key={line.sku} className="flex items-center justify-between p-4 bg-white border border-gray-300 rounded-lg">
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-gray-700 font-medium">{line.name} ({getUomDisplayText(line.uom, line.sku)})</span>
                               <span className="text-sm text-gray-500">
-                                {line.unit_price ? `${parseFloat(line.unit_price).toFixed(2)}€/${getUomDisplayText(line.uom, line.sku)}` : 'Hind puudub'}
+                                {line.unit_price ? `${line.unit_price.toFixed(2)}€/${getUomDisplayText(line.uom, line.sku)}` : 'Hind puudub'}
                               </span>
                             </div>
                             <div className="text-right">
                               <span className="text-lg font-bold text-green-600">
-                                Eeldatav maksumus: {line.unit_price ? `${(parseFloat(line.unit_price) * line.ordered_qty).toFixed(2)}€` : 'Hind puudub'}
+                                Eeldatav maksumus: {line.unit_price ? `${(line.unit_price * line.ordered_qty).toFixed(2)}€` : 'Hind puudub'}
                               </span>
                             </div>
                           </div>
@@ -456,8 +467,8 @@ export default function OrderPage(){
                             <div className="text-sm text-gray-600">Täpne summa selgub peale kauba komplekteerimist!</div>
                           </div>
                           <span className="text-2xl font-bold text-green-600">
-                            {form.order_lines.reduce((total:number, line:any) => 
-                              total + (line.unit_price ? parseFloat(line.unit_price) * line.ordered_qty : 0), 0
+                            {form.order_lines.reduce((total:number, line: FormOrderLine) => 
+                              total + (line.unit_price ? line.unit_price * line.ordered_qty : 0), 0
                             ).toFixed(2)}€
                           </span>
                         </div>

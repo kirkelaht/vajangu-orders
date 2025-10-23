@@ -120,7 +120,10 @@ async function main() {
   // Create products
   for (const product of products) {
     await prisma.product.create({
-      data: product,
+      data: {
+        ...product,
+        uom: product.uom as 'KG' | 'TK'
+      },
     });
   }
 

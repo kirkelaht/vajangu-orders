@@ -351,7 +351,21 @@ export default function AdminPage() {
   }
 
   function exportToExcel() {
-    const excelData: any[] = [];
+    const excelData: Array<{
+      'Tellimuse ID': string;
+      'Kliendi nimi': string;
+      'Telefon': string;
+      'E-post': string;
+      'Ring': string;
+      'Peatus': string;
+      'Toode': string;
+      'Kogus': number;
+      'Ühik': string;
+      'Hind': number;
+      'Summa': number;
+      'Staatus': string;
+      'Kuupäev': string;
+    }> = [];
     
     filteredOrders.forEach(order => {
       order.lines.forEach(line => {

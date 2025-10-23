@@ -66,8 +66,8 @@ export async function POST(req: Request) {
 
     // Calculate totals
     const subtotal = order.lines.reduce((total, line) => {
-      const unitPrice = line.unitPrice ? parseFloat(line.unitPrice) : 0;
-      const quantity = line.packedWeight || line.requestedQty;
+      const unitPrice = line.unitPrice ? Number(line.unitPrice) : 0;
+      const quantity = Number(line.packedWeight || line.requestedQty);
       return total + (unitPrice * quantity);
     }, 0);
 
@@ -89,15 +89,15 @@ export async function POST(req: Request) {
           ring: order.ring.region,
           stop: order.stop.name,
           deliveryType: order.deliveryType,
-          deliveryAddress: order.deliveryAddress,
+          deliveryAddress: order.deliveryAddress || undefined,
           paymentMethod: order.paymentMethod,
           products: order.lines.map(line => ({
             name: line.product.name,
             sku: line.product.sku,
-            quantity: line.packedWeight || line.requestedQty,
+            quantity: Number(line.packedWeight || line.requestedQty),
             uom: line.uom.toLowerCase(),
-            unitPrice: line.unitPrice ? parseFloat(line.unitPrice) : 0,
-            lineTotal: (line.unitPrice ? parseFloat(line.unitPrice) : 0) * (line.packedWeight || line.requestedQty)
+            unitPrice: line.unitPrice ? Number(line.unitPrice) : 0,
+            lineTotal: (line.unitPrice ? Number(line.unitPrice) : 0) * Number(line.packedWeight || line.requestedQty)
           })),
           subtotal,
           vatAmount,

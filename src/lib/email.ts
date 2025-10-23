@@ -113,10 +113,10 @@ Vajangu Perefarm meeskond
 
     const response = await mailerSend.email.send(emailParams);
     console.log('Email sent successfully:', response);
-    return { success: true, messageId: response.messageId };
+    return { success: true, messageId: (response as { messageId?: string }).messageId || 'unknown' };
   } catch (error) {
     console.error('Failed to send email:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
 
@@ -285,10 +285,10 @@ Vajangu Perefarm | Kõrgekvaliteediline kodumaine sealiha
 
     const response = await mailerSend.email.send(emailParams);
     console.log('Invoice email sent successfully:', response);
-    return { success: true, messageId: response.messageId };
+    return { success: true, messageId: (response as { messageId?: string }).messageId || 'unknown' };
   } catch (error) {
     console.error('Failed to send invoice email:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
 
@@ -379,9 +379,9 @@ Vajangu Perefarm meeskond
 
     const response = await mailerSend.email.send(emailParams);
     console.log('Custom email sent successfully:', response);
-    return { success: true, messageId: response.messageId };
+    return { success: true, messageId: (response as { messageId?: string }).messageId || 'unknown' };
   } catch (error) {
     console.error('Failed to send custom email:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }

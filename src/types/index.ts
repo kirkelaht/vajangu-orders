@@ -44,6 +44,7 @@ export interface Product {
   uom: string;
   catchWeight: boolean;
   active: boolean;
+  currentPrice?: number;
 }
 
 export interface OrderLine {

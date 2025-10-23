@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     const customSku = `CUSTOM_${Date.now()}`;
 
     // Create a custom product entry first
-    const customProduct = await prisma.product.upsert({
+    await prisma.product.upsert({
       where: { sku: customSku },
       update: {},
       create: {

@@ -81,8 +81,10 @@ export async function POST(req: Request) {
         paymentMethod: b.payment_method==="ülekandega" ? "TRANSFER" : "CASH",
         lines: {
           create: b.order_lines.map(l=>({
-            productSku: l.sku,
-            uom: l.uom,
+            product: {
+              connect: { sku: l.sku }
+            },
+            uom: l.uom.toUpperCase() as 'KG' | 'TK',
             requestedQty: l.ordered_qty,
             substitutionAllowed: !!l.substitution_allowed,
             unitPrice: l.unit_price || null
