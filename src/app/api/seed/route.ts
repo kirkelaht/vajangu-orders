@@ -242,9 +242,9 @@ export async function POST() {
     const priceList = await prisma.priceList.create({
       data: {
         name: 'Jaehind 2025',
+        segment: 'RETAIL',
         validFrom: new Date('2025-01-01'),
-        validTo: new Date('2025-12-31'),
-        active: true
+        validTo: new Date('2025-12-31')
       }
     });
 
