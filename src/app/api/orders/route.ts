@@ -135,10 +135,15 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
-  const now = new Date();
-  const items = await prisma.ring.findMany({
-    where:{ visibleFrom:{ lte: now }, visibleTo:{ gte: now }, cutoffAt:{ gt: now }, status:"OPEN" },
-    orderBy:{ ringDate:"asc" }
-  });
-  return NextResponse.json({ ok:true, items });
+  try {
+    const now = new Date();
+    const items = await prisma.ring.findMany({
+      where:{ visibleFrom:{ lte: now }, visibleTo:{ gte: now }, cutoffAt:{ gt: now }, status:"OPEN" },
+      orderBy:{ ringDate:"asc" }
+    });
+    return NextResponse.json({ ok:true, items });
+  } catch (e: unknown) {
+    console.error('GET /api/orders error:', e);
+    return NextResponse.json({ ok:false, error:"Database connection failed" }, { status: 500 });
+  }
 }
