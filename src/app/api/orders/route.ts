@@ -138,7 +138,10 @@ export async function GET() {
   try {
     const now = new Date();
     const items = await prisma.ring.findMany({
-      where:{ visibleFrom:{ lte: now }, visibleTo:{ gte: now }, cutoffAt:{ gt: now }, status:"OPEN" },
+      where:{ 
+        ringDate: { gte: now },
+        status:"OPEN" 
+      },
       orderBy:{ ringDate:"asc" }
     });
     return NextResponse.json({ ok:true, items });

@@ -80,9 +80,9 @@ model Ring {
   ringDate       DateTime
   region         String
   driver         String?
-  visibleFrom    DateTime
-  visibleTo      DateTime
-  cutoffAt       DateTime
+  visibleFrom    DateTime?
+  visibleTo      DateTime?
+  cutoffAt       DateTime?
   capacityOrders Int?
   capacityKg     Decimal?
   status         RingStatus  @default(OPEN)
@@ -95,10 +95,12 @@ model Stop {
   ringId       String
   ring         Ring     @relation(fields: [ringId], references: [id])
   name         String
-  meetingPoint String
-  timeStart    DateTime
-  timeEnd      DateTime
-  sortOrder    Int
+  place        String
+  meetingPoint String?
+  timeStart    DateTime?
+  timeEnd      DateTime?
+  order_index  Int
+  sortOrder    Int?
   orders       Order[]
 }
 

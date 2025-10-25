@@ -284,7 +284,7 @@ export default function OrderPage(){
                       onChange={e=>setForm({...form, ring_id:e.target.value, stop_id:""})}>
                       <option value="">Vali ring</option>
                       {rings.map((r: Ring)=><option key={r.id} value={r.id}>
-                        {r.region} — {new Date(r.ringDate).toLocaleDateString("et-EE")}
+                        {new Date(r.ringDate).toLocaleDateString("et-EE", {day: '2-digit', month: '2-digit'})} {r.region}
                       </option>)}
                     </select>
                   </div>
@@ -297,7 +297,7 @@ export default function OrderPage(){
                       onChange={e=>setForm({...form, stop_id:e.target.value})}>
                       <option value="">{isHomeDelivery ? "Vali piirkond" : "Vali peatus"}</option>
                       {stops.map((s: Stop)=><option key={s.id} value={s.id}>
-                        {isHomeDelivery ? s.name : `${s.name} (${s.meetingPoint})`}
+                        {isHomeDelivery ? s.name : `${s.name} (${s.place})`}
                       </option>)}
                     </select>
                   </div>
