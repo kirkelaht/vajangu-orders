@@ -5,36 +5,38 @@ export interface Customer {
   name: string;
   email: string;
   phone: string;
-  orgName?: string;
-  regCode?: string;
+  org_name?: string;
+  reg_code?: string;
   vat?: string;
   segment: string;
   consentEmail: boolean;
   consentSms: boolean;
-  createdAt: string;
+  created_at: string;
 }
 
 export interface Ring {
   id: string;
-  ringDate: string;
+  ring_date: string;
   region: string;
   driver?: string;
-  visibleFrom: string;
-  visibleTo: string;
-  cutoffAt: string;
-  capacityOrders?: number;
-  capacityKg?: number;
+  visible_from: string;
+  visible_to: string;
+  cutoff_at: string;
+  capacity_orders?: number;
+  capacity_kg?: number;
   status: string;
 }
 
 export interface Stop {
   id: string;
-  ringId: string;
+  ring_id: string;
   name: string;
-  meetingPoint: string;
-  timeStart: string;
-  timeEnd: string;
-  sortOrder: number;
+  place: string;
+  meeting_point?: string;
+  time_start?: string;
+  time_end?: string;
+  order_index: number;
+  sort_order?: number;
 }
 
 export interface Product {
@@ -42,49 +44,49 @@ export interface Product {
   name: string;
   category: string;
   uom: string;
-  catchWeight: boolean;
+  catch_weight: boolean;
   active: boolean;
-  currentPrice?: number;
+  current_price?: number;
 }
 
 export interface OrderLine {
   id: string;
-  orderId: string;
-  productSku: string;
+  order_id: string;
+  product_sku: string;
   product: Product;
   uom: string;
-  requestedQty: number;
-  packedQty?: number;
-  packedWeight?: number;
-  unitPrice?: number;
-  lineTotal?: number;
-  substitutionAllowed: boolean;
+  requested_qty: number;
+  packed_qty?: number;
+  packed_weight?: number;
+  unit_price?: number;
+  line_total?: number;
+  substitution_allowed: boolean;
 }
 
 export interface Order {
   id: string;
-  createdAt: string;
+  created_at: string;
   channel: string;
-  customerId: string;
+  customer_id: string;
   customer: Customer;
-  ringId: string;
+  ring_id: string;
   ring: Ring;
-  stopId: string;
+  stop_id: string;
   stop: Stop;
-  deliveryType: string;
-  deliveryAddress?: string;
+  delivery_type: string;
+  delivery_address?: string;
   status: string;
-  notesCustomer?: string;
-  notesInternal?: string;
-  paymentMethod: string;
-  paymentStatus: string;
-  invoiceId?: string;
-  invoiceNumber?: string;
-  invoicedAt?: string;
-  invoiceTotal?: number;
-  taxRate?: number;
-  pickedBy?: string;
-  deliveredBy?: string;
+  notes_customer?: string;
+  notes_internal?: string;
+  payment_method: string;
+  payment_status: string;
+  invoice_id?: string;
+  invoice_number?: string;
+  invoiced_at?: string;
+  invoice_total?: number;
+  tax_rate?: number;
+  picked_by?: string;
+  delivered_by?: string;
   lines: OrderLine[];
 }
 

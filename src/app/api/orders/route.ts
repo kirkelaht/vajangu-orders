@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     if(!ring) return NextResponse.json({ok:false, error:"Ring not found"},{status:404});
 
     const now = new Date();
-    if(now > ring.cutoffAt){
+    if(now > ring.cutoff_at){
       return NextResponse.json({ok:false, error:"Cutoff passed for this ring"},{status:422});
     }
 
@@ -39,9 +39,9 @@ export async function POST(req: Request) {
     const dup = await prisma.order.findFirst({
       where:{
         customer: { phone: b.customer.phone },
-        ringId: b.ring_id,
-        stopId: b.stop_id,
-        createdAt: { gte: new Date(Date.now() - 24*60*60*1000) }
+        ring_id: b.ring_id,
+        stop_id: b.stop_id,
+        created_at: { gte: new Date(Date.now() - 24*60*60*1000) }
       },
       select:{ id:true }
     });
@@ -53,15 +53,15 @@ export async function POST(req: Request) {
       update: { 
         name: b.customer.name, 
         phone: b.customer.phone, 
-        orgName: b.customer.org_name || null,
-        regCode: b.customer.reg_code || null
+        org_name: b.customer.org_name || null,
+        reg_code: b.customer.reg_code || null
       },
       create: { 
         name: b.customer.name, 
         phone: b.customer.phone, 
         email: b.customer.email, 
-        orgName: b.customer.org_name || null,
-        regCode: b.customer.reg_code || null,
+        org_name: b.customer.org_name || null,
+        reg_code: b.customer.reg_code || null,
         segment: "RETAIL" // Default to retail for public orders
       }
     });
@@ -70,24 +70,24 @@ export async function POST(req: Request) {
     const order = await prisma.order.create({
       data:{
         channel: b.channel === "veeb" ? "WEB" : b.channel === "telefon" ? "PHONE" : b.channel === "FB" ? "FACEBOOK" : "EMAIL",
-        customerId: customer.id,
-        ringId: b.ring_id,
-        stopId: b.stop_id,
-        deliveryType: isHomeDelivery ? "HOME" : "STOP",
-        deliveryAddress: isHomeDelivery ? b.notes_customer : (b.delivery_address || null),
+        customer_id: customer.id,
+        ring_id: b.ring_id,
+        stop_id: b.stop_id,
+        delivery_type: isHomeDelivery ? "HOME" : "STOP",
+        delivery_address: isHomeDelivery ? b.notes_customer : (b.delivery_address || null),
         status: "NEW",
-        notesCustomer: b.notes_customer || null,
-        notesInternal: b.notes_internal || null,
-        paymentMethod: b.payment_method==="ülekandega" ? "TRANSFER" : "CASH",
+        notes_customer: b.notes_customer || null,
+        notes_internal: b.notes_internal || null,
+        payment_method: b.payment_method==="ülekandega" ? "TRANSFER" : "CASH",
         lines: {
           create: b.order_lines.map(l=>({
             product: {
               connect: { sku: l.sku }
             },
             uom: l.uom.toUpperCase() as 'KG' | 'TK',
-            requestedQty: l.ordered_qty,
-            substitutionAllowed: !!l.substitution_allowed,
-            unitPrice: l.unit_price || null
+            requested_qty: l.ordered_qty,
+            substitution_allowed: !!l.substitution_allowed,
+            unit_price: l.unit_price || null
           }))
         }
       },
@@ -142,18 +142,18 @@ export async function GET() {
     const enableVisibilityFilter = process.env.NEXT_PUBLIC_ENABLE_VISIBILITY_FILTER === 'true';
     
     const whereClause: any = { 
-      ringDate: { gte: now },
+      ring_date: { gte: now },
       status: "OPEN" 
     };
     
     // Only apply visibility filter if feature flag is enabled
     if (enableVisibilityFilter) {
-      whereClause.visibleFrom = { lte: now };
+      whereClause.visible_from = { lte: now };
     }
     
     const items = await prisma.ring.findMany({
       where: whereClause,
-      orderBy: { ringDate: "asc" }
+      orderBy: { ring_date: "asc" }
     });
     return NextResponse.json({ ok: true, items });
   } catch (e: unknown) {

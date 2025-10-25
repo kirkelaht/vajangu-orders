@@ -1,56 +1,56 @@
--- Ensure Ring table has required columns
+-- Ensure rings table has required columns
 DO $$ 
 BEGIN
-    -- Add missing columns to Ring table if they don't exist
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Ring' AND column_name = 'id') THEN
-        ALTER TABLE "Ring" ADD COLUMN id text PRIMARY KEY;
+    -- Add missing columns to rings table if they don't exist
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'rings' AND column_name = 'id') THEN
+        ALTER TABLE rings ADD COLUMN id text PRIMARY KEY;
     END IF;
     
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Ring' AND column_name = 'ringDate') THEN
-        ALTER TABLE "Ring" ADD COLUMN "ringDate" timestamp;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'rings' AND column_name = 'ring_date') THEN
+        ALTER TABLE rings ADD COLUMN ring_date timestamp;
     END IF;
     
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Ring' AND column_name = 'region') THEN
-        ALTER TABLE "Ring" ADD COLUMN region text;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'rings' AND column_name = 'region') THEN
+        ALTER TABLE rings ADD COLUMN region text;
     END IF;
     
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Ring' AND column_name = 'driver') THEN
-        ALTER TABLE "Ring" ADD COLUMN driver text;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'rings' AND column_name = 'driver') THEN
+        ALTER TABLE rings ADD COLUMN driver text;
     END IF;
 END $$;
 
--- Ensure Stop table has required columns
+-- Ensure stops table has required columns
 DO $$ 
 BEGIN
-    -- Add missing columns to Stop table if they don't exist
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Stop' AND column_name = 'id') THEN
-        ALTER TABLE "Stop" ADD COLUMN id text PRIMARY KEY;
+    -- Add missing columns to stops table if they don't exist
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'stops' AND column_name = 'id') THEN
+        ALTER TABLE stops ADD COLUMN id text PRIMARY KEY;
     END IF;
     
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Stop' AND column_name = 'ringId') THEN
-        ALTER TABLE "Stop" ADD COLUMN "ringId" text NOT NULL REFERENCES "Ring"(id) ON DELETE CASCADE;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'stops' AND column_name = 'ring_id') THEN
+        ALTER TABLE stops ADD COLUMN ring_id text NOT NULL REFERENCES rings(id) ON DELETE CASCADE;
     END IF;
     
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Stop' AND column_name = 'name') THEN
-        ALTER TABLE "Stop" ADD COLUMN name text NOT NULL;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'stops' AND column_name = 'name') THEN
+        ALTER TABLE stops ADD COLUMN name text NOT NULL;
     END IF;
     
     -- Add place column as nullable first, then update existing NULLs, then make NOT NULL
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Stop' AND column_name = 'place') THEN
-        ALTER TABLE "Stop" ADD COLUMN place text;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'stops' AND column_name = 'place') THEN
+        ALTER TABLE stops ADD COLUMN place text;
         -- Update any existing NULL values with a default value
-        UPDATE "Stop" SET place = 'Teadmata' WHERE place IS NULL;
+        UPDATE stops SET place = 'Teadmata' WHERE place IS NULL;
         -- Now make it NOT NULL
-        ALTER TABLE "Stop" ALTER COLUMN place SET NOT NULL;
+        ALTER TABLE stops ALTER COLUMN place SET NOT NULL;
     END IF;
     
     -- Add order_index column as nullable first, then update existing NULLs, then make NOT NULL
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Stop' AND column_name = 'order_index') THEN
-        ALTER TABLE "Stop" ADD COLUMN order_index int;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'stops' AND column_name = 'order_index') THEN
+        ALTER TABLE stops ADD COLUMN order_index int;
         -- Update any existing NULL values with a default value
-        UPDATE "Stop" SET order_index = 999 WHERE order_index IS NULL;
+        UPDATE stops SET order_index = 999 WHERE order_index IS NULL;
         -- Now make it NOT NULL
-        ALTER TABLE "Stop" ALTER COLUMN order_index SET NOT NULL;
+        ALTER TABLE stops ALTER COLUMN order_index SET NOT NULL;
     END IF;
 END $$;
 
@@ -58,14 +58,14 @@ END $$;
 DO $$
 BEGIN
     -- Update any existing NULL place values
-    UPDATE "Stop" SET place = 'Teadmata' WHERE place IS NULL;
+    UPDATE stops SET place = 'Teadmata' WHERE place IS NULL;
     
     -- Update any existing NULL order_index values
-    UPDATE "Stop" SET order_index = 999 WHERE order_index IS NULL;
+    UPDATE stops SET order_index = 999 WHERE order_index IS NULL;
     
     -- Ensure NOT NULL constraints are applied
-    ALTER TABLE "Stop" ALTER COLUMN place SET NOT NULL;
-    ALTER TABLE "Stop" ALTER COLUMN order_index SET NOT NULL;
+    ALTER TABLE stops ALTER COLUMN place SET NOT NULL;
+    ALTER TABLE stops ALTER COLUMN order_index SET NOT NULL;
 EXCEPTION
     WHEN OTHERS THEN
         -- If constraints already exist, ignore the error
@@ -73,7 +73,7 @@ EXCEPTION
 END $$;
 
 -- UPSERT the rings (IDs are stable so future runs update)
-INSERT INTO "Ring"(id, "ringDate", region, driver, "visibleFrom") VALUES
+INSERT INTO rings(id, ring_date, region, driver, visible_from) VALUES
     ('ring-1','2025-11-07 00:00:00','Vändra–Enge ring', NULL, '2025-11-07 00:00:00'),
     ('ring-2','2025-11-12 00:00:00','Järva-Jaani–Kõmsi ring', NULL, '2025-11-12 00:00:00'),
     ('ring-3','2025-11-19 00:00:00','Kose–Haapsalu ring', NULL, '2025-11-19 00:00:00'),
@@ -81,14 +81,14 @@ INSERT INTO "Ring"(id, "ringDate", region, driver, "visibleFrom") VALUES
     ('ring-5','2025-11-26 00:00:00','Koeru–Vändra ring', NULL, '2025-11-26 00:00:00'),
     ('ring-6','2025-11-14 00:00:00','Aravete–Maardu ring', NULL, '2025-11-14 00:00:00')
 ON CONFLICT (id) DO UPDATE SET 
-    "ringDate" = EXCLUDED."ringDate", 
+    ring_date = EXCLUDED.ring_date, 
     region = EXCLUDED.region,
     driver = EXCLUDED.driver,
-    "visibleFrom" = EXCLUDED."visibleFrom";
+    visible_from = EXCLUDED.visible_from;
 
 -- RING 1: 07.11 Vändra–Enge
-DELETE FROM "Stop" WHERE "ringId" IN ('ring-1');
-INSERT INTO "Stop"(id, "ringId", name, place, order_index) VALUES
+DELETE FROM stops WHERE ring_id IN ('ring-1');
+INSERT INTO stops(id, ring_id, name, place, order_index) VALUES
 ('ring-1-01','ring-1','Vändra','Grossi poe parkla',1),
 ('ring-1-02','ring-1','Tootsi','bussijaama parkla',2),
 ('ring-1-03','ring-1','Selja','söökla parkla',3),
@@ -102,8 +102,8 @@ INSERT INTO "Stop"(id, "ringId", name, place, order_index) VALUES
 ('ring-1-11','ring-1','Enge','Olerexi tankla',11);
 
 -- RING 2: 12.11 Järva-Jaani–Kõmsi
-DELETE FROM "Stop" WHERE "ringId" IN ('ring-2');
-INSERT INTO "Stop"(id, "ringId", name, place, order_index) VALUES
+DELETE FROM stops WHERE ring_id IN ('ring-2');
+INSERT INTO stops(id, ring_id, name, place, order_index) VALUES
 ('ring-2-01','ring-2','Järva-Jaani','Coopi poe vastas parklas',1),
 ('ring-2-02','ring-2','Roosna-Alliku','bussijaama parklas',2),
 ('ring-2-03','ring-2','Paide','Maksimarketi vastas Olerexi tankla',3),
@@ -120,8 +120,8 @@ INSERT INTO "Stop"(id, "ringId", name, place, order_index) VALUES
 ('ring-2-14','ring-2','Kõmsi','poe parkla',14);
 
 -- RING 3: 19.11 Kose–Haapsalu
-DELETE FROM "Stop" WHERE "ringId" IN ('ring-3');
-INSERT INTO "Stop"(id, "ringId", name, place, order_index) VALUES
+DELETE FROM stops WHERE ring_id IN ('ring-3');
+INSERT INTO stops(id, ring_id, name, place, order_index) VALUES
 ('ring-3-01','ring-3','Kose','keskuse parkla',1),
 ('ring-3-02','ring-3','Keila','kiriku parkla',2),
 ('ring-3-03','ring-3','Vasalemma','Meie poe parkla',3),
@@ -135,8 +135,8 @@ INSERT INTO "Stop"(id, "ringId", name, place, order_index) VALUES
 ('ring-3-11','ring-3','Haapsalu','Rannarootsi keskuse parkla',11);
 
 -- RING 4: 21.11 Jõgeva–Viljandi
-DELETE FROM "Stop" WHERE "ringId" IN ('ring-4');
-INSERT INTO "Stop"(id, "ringId", name, place, order_index) VALUES
+DELETE FROM stops WHERE ring_id IN ('ring-4');
+INSERT INTO stops(id, ring_id, name, place, order_index) VALUES
 ('ring-4-01','ring-4','Jõgeva','linna äärne Alexela',1),
 ('ring-4-02','ring-4','Põltsamaa','Puhu risti Olerexi tankla',2),
 ('ring-4-03','ring-4','Tartu','Lõunakeskuse Alexela tankla',3),
@@ -151,8 +151,8 @@ INSERT INTO "Stop"(id, "ringId", name, place, order_index) VALUES
 ('ring-4-12','ring-4','Viljandi','Paala Maksimarketi parkla',12);
 
 -- RING 5: 26.11 Koeru–Vändra
-DELETE FROM "Stop" WHERE "ringId" IN ('ring-5');
-INSERT INTO "Stop"(id, "ringId", name, place, order_index) VALUES
+DELETE FROM stops WHERE ring_id IN ('ring-5');
+INSERT INTO stops(id, ring_id, name, place, order_index) VALUES
 ('ring-5-01','ring-5','Koeru','kiriku parkla',1),
 ('ring-5-02','ring-5','Imavere','Meie poe parkla',2),
 ('ring-5-03','ring-5','Võhma','bussijaama parkla',3),
@@ -167,8 +167,8 @@ INSERT INTO "Stop"(id, "ringId", name, place, order_index) VALUES
 ('ring-5-12','ring-5','Vändra','Grossi poe parkla',12);
 
 -- RING 6: 14.11 Aravete–Maardu
-DELETE FROM "Stop" WHERE "ringId" IN ('ring-6');
-INSERT INTO "Stop"(id, "ringId", name, place, order_index) VALUES
+DELETE FROM stops WHERE ring_id IN ('ring-6');
+INSERT INTO stops(id, ring_id, name, place, order_index) VALUES
 ('ring-6-01','ring-6','Aravete','Meie poe parkla',1),
 ('ring-6-02','ring-6','Jäneda','Coop poe parkla',2),
 ('ring-6-03','ring-6','Aegviidu','rongijaama parkla',3),

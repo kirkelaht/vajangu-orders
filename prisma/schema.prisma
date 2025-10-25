@@ -63,8 +63,8 @@ enum RingStatus {
 model Customer {
   id           String   @id @default(cuid())
   name         String
-  orgName      String?
-  regCode      String?
+  org_name     String?  @map("orgName")
+  reg_code     String?  @map("regCode")
   vat          String?
   phone        String
   email        String   @unique
@@ -72,106 +72,106 @@ model Customer {
   consentEmail Boolean  @default(false)
   consentSms   Boolean  @default(false)
   orders       Order[]
-  createdAt    DateTime @default(now())
+  created_at   DateTime @default(now()) @map("createdAt")
 }
 
 model Ring {
-  id             String     @id @default(cuid())
-  ringDate       DateTime
-  region         String
-  driver         String?
-  visibleFrom    DateTime?
-  visibleTo      DateTime?
-  cutoffAt       DateTime?
-  capacityOrders Int?
-  capacityKg     Decimal?
-  status         RingStatus  @default(OPEN)
-  stops          Stop[]
-  orders         Order[]
+  id              String     @id @default(cuid())
+  ring_date       DateTime   @map("ringDate")
+  region          String
+  driver          String?
+  visible_from    DateTime?  @map("visibleFrom")
+  visible_to      DateTime?  @map("visibleTo")
+  cutoff_at       DateTime?  @map("cutoffAt")
+  capacity_orders Int?       @map("capacityOrders")
+  capacity_kg     Decimal?   @map("capacityKg")
+  status          RingStatus @default(OPEN)
+  stops           Stop[]
+  orders          Order[]
 }
 
 model Stop {
-  id           String   @id @default(cuid())
-  ringId       String
-  ring         Ring     @relation(fields: [ringId], references: [id])
-  name         String
-  place        String
-  meetingPoint String?
-  timeStart    DateTime?
-  timeEnd      DateTime?
-  order_index  Int
-  sortOrder    Int?
-  orders       Order[]
+  id            String   @id @default(cuid())
+  ring_id       String   @map("ringId")
+  ring          Ring     @relation(fields: [ring_id], references: [id])
+  name          String
+  place         String
+  meeting_point String?  @map("meetingPoint")
+  time_start    DateTime? @map("timeStart")
+  time_end      DateTime? @map("timeEnd")
+  order_index   Int
+  sort_order    Int?     @map("sortOrder")
+  orders        Order[]
 }
 
 model Product {
-  sku         String     @id
-  name        String
-  category    String
-  uom         UOM
-  catchWeight Boolean    @default(false)
-  active      Boolean    @default(true)
-  priceItems  PriceItem[]
-  orderLines  OrderLine[]
+  sku          String     @id
+  name         String
+  category     String
+  uom          UOM
+  catch_weight Boolean    @default(false) @map("catchWeight")
+  active       Boolean    @default(true)
+  priceItems   PriceItem[]
+  orderLines   OrderLine[]
 }
 
 model PriceList {
-  id        String     @id @default(cuid())
-  name      String
-  segment   Segment
-  validFrom DateTime
-  validTo   DateTime?
-  items     PriceItem[]
+  id         String     @id @default(cuid())
+  name       String
+  segment    Segment
+  valid_from DateTime   @map("validFrom")
+  valid_to   DateTime?  @map("validTo")
+  items      PriceItem[]
 }
 
 model PriceItem {
-  id          String   @id @default(cuid())
-  priceListId String
-  priceList   PriceList @relation(fields: [priceListId], references: [id])
-  productSku  String
-  product     Product  @relation(fields: [productSku], references: [sku])
-  unitPrice   Decimal
+  id           String     @id @default(cuid())
+  price_list_id String    @map("priceListId")
+  priceList    PriceList  @relation(fields: [price_list_id], references: [id])
+  product_sku  String     @map("productSku")
+  product      Product    @relation(fields: [product_sku], references: [sku])
+  unit_price   Decimal    @map("unitPrice")
 }
 
 model Order {
-  id            String        @id @default(cuid())
-  createdAt     DateTime      @default(now())
-  channel       Channel
-  customerId    String
-  customer      Customer      @relation(fields: [customerId], references: [id])
-  ringId        String
-  ring          Ring          @relation(fields: [ringId], references: [id])
-  stopId        String
-  stop          Stop          @relation(fields: [stopId], references: [id])
-  deliveryType  DeliveryType
-  deliveryAddress String?
-  status        OrderStatus   @default(NEW)
-  notesCustomer String?
-  notesInternal String?
-  paymentMethod PaymentMethod
-  paymentStatus PaymentStatus @default(UNPAID)
-  invoiceId     String?
-  invoiceNumber String?       @unique
-  invoicedAt    DateTime?
-  invoiceTotal  Decimal?
-  taxRate       Decimal?
-  pickedBy      String?
-  deliveredBy   String?
-  lines         OrderLine[]
+  id               String        @id @default(cuid())
+  created_at       DateTime      @default(now()) @map("createdAt")
+  channel          Channel
+  customer_id      String        @map("customerId")
+  customer         Customer      @relation(fields: [customer_id], references: [id])
+  ring_id          String        @map("ringId")
+  ring             Ring          @relation(fields: [ring_id], references: [id])
+  stop_id          String        @map("stopId")
+  stop             Stop          @relation(fields: [stop_id], references: [id])
+  delivery_type    DeliveryType  @map("deliveryType")
+  delivery_address String?       @map("deliveryAddress")
+  status           OrderStatus   @default(NEW)
+  notes_customer   String?       @map("notesCustomer")
+  notes_internal   String?       @map("notesInternal")
+  payment_method   PaymentMethod @map("paymentMethod")
+  payment_status   PaymentStatus @default(UNPAID) @map("paymentStatus")
+  invoice_id       String?       @map("invoiceId")
+  invoice_number   String?       @unique @map("invoiceNumber")
+  invoiced_at      DateTime?     @map("invoicedAt")
+  invoice_total    Decimal?      @map("invoiceTotal")
+  tax_rate         Decimal?      @map("taxRate")
+  picked_by        String?       @map("pickedBy")
+  delivered_by     String?       @map("deliveredBy")
+  lines            OrderLine[]
 }
 
 model OrderLine {
-  id                  String   @id @default(cuid())
-  orderId             String
-  order               Order    @relation(fields: [orderId], references: [id])
-  productSku          String
-  product             Product  @relation(fields: [productSku], references: [sku])
-  uom                 UOM
-  requestedQty        Decimal
-  packedQty           Decimal?
-  packedWeight        Decimal?
-  unitPrice           Decimal?
-  lineTotal           Decimal?
-  substitutionAllowed Boolean  @default(false)
-  substitutionSku     String?
+  id                   String   @id @default(cuid())
+  order_id             String   @map("orderId")
+  order                Order    @relation(fields: [order_id], references: [id])
+  product_sku          String   @map("productSku")
+  product              Product  @relation(fields: [product_sku], references: [sku])
+  uom                  UOM
+  requested_qty        Decimal  @map("requestedQty")
+  packed_qty           Decimal? @map("packedQty")
+  packed_weight        Decimal? @map("packedWeight")
+  unit_price           Decimal? @map("unitPrice")
+  line_total           Decimal? @map("lineTotal")
+  substitution_allowed Boolean  @default(false) @map("substitutionAllowed")
+  substitution_sku     String?  @map("substitutionSku")
 }

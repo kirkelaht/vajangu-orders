@@ -290,9 +290,9 @@ export default function OrderPage(){
                     <select className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent" value={form.ring_id}
                       onChange={e=>setForm({...form, ring_id:e.target.value, stop_id:""})}>
                       <option value="">Vali ring</option>
-                      {rings.map((r: Ring)=><option key={r.id} value={r.id}>
-                        {new Date(r.ringDate).toLocaleDateString("et-EE", {day: '2-digit', month: '2-digit'})} {r.region}
-                      </option>)}
+       {rings.map((r: Ring)=><option key={r.id} value={r.id}>
+         {new Date(r.ring_date).toLocaleDateString("et-EE", {day: '2-digit', month: '2-digit'})} {r.region}
+       </option>)}
                     </select>
                   </div>
 
@@ -383,7 +383,7 @@ export default function OrderPage(){
                                 </div>
                               ) : (
                                 <span className="text-lg font-bold text-green-600">
-                                  {p.currentPrice ? `${p.currentPrice.toFixed(2)}€` : 'Hind puudub'}
+                                  {p.current_price ? `${p.current_price.toFixed(2)}€` : 'Hind puudub'}
                                 </span>
                               )}
                             </div>
@@ -425,7 +425,7 @@ export default function OrderPage(){
                                 />
                                 <button 
                                   type="button" 
-                                  onClick={()=>addProduct(p.sku, p.name, p.uom, productQuantities[p.sku] || 1, p.currentPrice || 0)}
+                                  onClick={()=>addProduct(p.sku, p.name, p.uom, productQuantities[p.sku] || 1, p.current_price || 0)}
                                   className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors">
                                   Lisa
                                 </button>
