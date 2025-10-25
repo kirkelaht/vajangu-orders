@@ -137,16 +137,27 @@ export async function POST(req: Request) {
 export async function GET() {
   try {
     const now = new Date();
+    
+    // Check if visibility filtering feature flag is enabled
+    const enableVisibilityFilter = process.env.NEXT_PUBLIC_ENABLE_VISIBILITY_FILTER === 'true';
+    
+    const whereClause: any = { 
+      ringDate: { gte: now },
+      status: "OPEN" 
+    };
+    
+    // Only apply visibility filter if feature flag is enabled
+    if (enableVisibilityFilter) {
+      whereClause.visibleFrom = { lte: now };
+    }
+    
     const items = await prisma.ring.findMany({
-      where:{ 
-        ringDate: { gte: now },
-        status:"OPEN" 
-      },
-      orderBy:{ ringDate:"asc" }
+      where: whereClause,
+      orderBy: { ringDate: "asc" }
     });
-    return NextResponse.json({ ok:true, items });
+    return NextResponse.json({ ok: true, items });
   } catch (e: unknown) {
     console.error('GET /api/orders error:', e);
-    return NextResponse.json({ ok:false, error:"Database connection failed" }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Database connection failed" }, { status: 500 });
   }
 }

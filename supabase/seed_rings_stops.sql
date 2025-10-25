@@ -35,27 +35,56 @@ BEGIN
         ALTER TABLE "Stop" ADD COLUMN name text NOT NULL;
     END IF;
     
+    -- Add place column as nullable first, then update existing NULLs, then make NOT NULL
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Stop' AND column_name = 'place') THEN
-        ALTER TABLE "Stop" ADD COLUMN place text NOT NULL;
+        ALTER TABLE "Stop" ADD COLUMN place text;
+        -- Update any existing NULL values with a default value
+        UPDATE "Stop" SET place = 'Teadmata' WHERE place IS NULL;
+        -- Now make it NOT NULL
+        ALTER TABLE "Stop" ALTER COLUMN place SET NOT NULL;
     END IF;
     
+    -- Add order_index column as nullable first, then update existing NULLs, then make NOT NULL
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Stop' AND column_name = 'order_index') THEN
-        ALTER TABLE "Stop" ADD COLUMN order_index int NOT NULL;
+        ALTER TABLE "Stop" ADD COLUMN order_index int;
+        -- Update any existing NULL values with a default value
+        UPDATE "Stop" SET order_index = 999 WHERE order_index IS NULL;
+        -- Now make it NOT NULL
+        ALTER TABLE "Stop" ALTER COLUMN order_index SET NOT NULL;
     END IF;
 END $$;
 
+-- Handle existing columns that might have NULL values
+DO $$
+BEGIN
+    -- Update any existing NULL place values
+    UPDATE "Stop" SET place = 'Teadmata' WHERE place IS NULL;
+    
+    -- Update any existing NULL order_index values
+    UPDATE "Stop" SET order_index = 999 WHERE order_index IS NULL;
+    
+    -- Ensure NOT NULL constraints are applied
+    ALTER TABLE "Stop" ALTER COLUMN place SET NOT NULL;
+    ALTER TABLE "Stop" ALTER COLUMN order_index SET NOT NULL;
+EXCEPTION
+    WHEN OTHERS THEN
+        -- If constraints already exist, ignore the error
+        NULL;
+END $$;
+
 -- UPSERT the rings (IDs are stable so future runs update)
-INSERT INTO "Ring"(id, "ringDate", region, driver) VALUES
-    ('ring-1','2025-11-07 00:00:00','Vändra–Enge ring', NULL),
-    ('ring-2','2025-11-12 00:00:00','Järva-Jaani–Kõmsi ring', NULL),
-    ('ring-3','2025-11-19 00:00:00','Kose–Haapsalu ring', NULL),
-    ('ring-4','2025-11-21 00:00:00','Jõgeva–Viljandi ring', NULL),
-    ('ring-5','2025-11-26 00:00:00','Koeru–Vändra ring', NULL),
-    ('ring-6','2025-11-14 00:00:00','Aravete–Maardu ring', NULL)
+INSERT INTO "Ring"(id, "ringDate", region, driver, "visibleFrom") VALUES
+    ('ring-1','2025-11-07 00:00:00','Vändra–Enge ring', NULL, '2025-11-07 00:00:00'),
+    ('ring-2','2025-11-12 00:00:00','Järva-Jaani–Kõmsi ring', NULL, '2025-11-12 00:00:00'),
+    ('ring-3','2025-11-19 00:00:00','Kose–Haapsalu ring', NULL, '2025-11-19 00:00:00'),
+    ('ring-4','2025-11-21 00:00:00','Jõgeva–Viljandi ring', NULL, '2025-11-21 00:00:00'),
+    ('ring-5','2025-11-26 00:00:00','Koeru–Vändra ring', NULL, '2025-11-26 00:00:00'),
+    ('ring-6','2025-11-14 00:00:00','Aravete–Maardu ring', NULL, '2025-11-14 00:00:00')
 ON CONFLICT (id) DO UPDATE SET 
     "ringDate" = EXCLUDED."ringDate", 
     region = EXCLUDED.region,
-    driver = EXCLUDED.driver;
+    driver = EXCLUDED.driver,
+    "visibleFrom" = EXCLUDED."visibleFrom";
 
 -- RING 1: 07.11 Vändra–Enge
 DELETE FROM "Stop" WHERE "ringId" IN ('ring-1');
