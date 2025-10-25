@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Ring, Stop, Product } from "@/types";
+import { fetchRings, fetchStopsByRing } from "@/lib/data";
 
 // Form-specific order line type
 interface FormOrderLine {
@@ -56,7 +57,8 @@ export default function OrderPage(){
   }
 
   useEffect(()=>{ 
-    fetch("/api/orders").then(r=>r.json()).then(j=>j.ok && setRings(j.items));
+    // Fetch rings using Supabase client
+    fetchRings().then(setRings).catch(console.error);
     fetch("/api/products").then(r=>r.json()).then(j=>{
       if(j.ok) {
         // Filter out custom products from customer view
@@ -100,7 +102,12 @@ export default function OrderPage(){
   },[]);
   
   useEffect(()=>{
-    if(form.ring_id) fetch(`/api/stops?ringId=${form.ring_id}`).then(r=>r.json()).then(j=>j.ok && setStops(j.items));
+    if(form.ring_id) {
+      // Fetch stops using Supabase client
+      fetchStopsByRing(form.ring_id).then(setStops).catch(console.error);
+    } else {
+      setStops([]);
+    }
   },[form.ring_id]);
 
   // Filter products by category and sort special products to top for Värske sealiha and Hakklihad
