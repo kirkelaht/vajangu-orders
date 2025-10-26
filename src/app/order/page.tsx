@@ -3,6 +3,21 @@
 import { useState, useEffect } from "react";
 import { Ring, Stop, Product } from "@/types";
 
+// API Product type
+type ApiProduct = {
+  id: string;
+  name: string;
+  unit?: string | null;
+  price_eur?: number | null;
+  price_cents?: number | null;
+};
+
+// API ProductGroup type
+type ApiProductGroup = {
+  group: string;
+  products: ApiProduct[];
+};
+
 // Form-specific order line type
 interface FormOrderLine {
   sku: string;
@@ -17,7 +32,7 @@ export default function OrderPage(){
   const [rings,setRings]=useState<Ring[]>([]);
   const [stops,setStops]=useState<Stop[]>([]);
   const [products,setProducts]=useState<Product[]>([]);
-  const [productGroups,setProductGroups]=useState<{group: string, products: any[]}[]>([]);
+  const [productGroups,setProductGroups]=useState<ApiProductGroup[]>([]);
   const [categories,setCategories]=useState<string[]>([]);
   const [selectedCategory,setSelectedCategory]=useState<string>("");
   const [productQuantities,setProductQuantities]=useState<{[key:string]:number}>({});
@@ -67,12 +82,12 @@ export default function OrderPage(){
     }).catch(console.error);
     fetch("/api/products").then(r=>r.json()).then(j=>{
       if(Array.isArray(j)) {
-        setProductGroups(j);
-        const cats = j.map(g => g.group);
+        setProductGroups(j as ApiProductGroup[]);
+        const cats = j.map((g: ApiProductGroup) => g.group);
         setCategories(cats);
       } else if(j.ok && Array.isArray(j.items)) {
-        setProducts(j.items);
-        const cats = [...new Set(j.items.map((p: Product)=>p.category))] as string[];
+        setProducts(j.items as unknown as Product[]);
+        const cats = [...new Set((j.items as Product[]).map((p: Product)=>p.category))] as string[];
         setCategories(cats);
       }
     }).catch(console.error);
