@@ -542,7 +542,7 @@ export default function OrderPage(){
                     required
                   />
                   <label htmlFor="privacy-consent" className="text-sm text-gray-700">
-                    ☐ Kinnitan, et olen tutvunud{" "}
+                    Kinnitan, et olen tutvunud{" "}
                     <a 
                       href="/privacy-policy" 
                       target="_blank" 
