@@ -25,10 +25,13 @@ export async function GET() {
 
   const rows: any[] = await res.json();
 
-  // Show only active rows
-  const active = rows.filter(r => r.active !== false);
+  // Exclude legacy PORK SKUs
+  const cleaned = rows.filter((r: any) => !(String(r.sku || '').startsWith('PORK-')));
 
-  // Group by groupName (fallback category)
+  // Show only active rows
+  const active = cleaned.filter(r => r.active !== false);
+
+  // Group by groupName (fallback category) and log sizes
   const groups: Record<string, any[]> = {};
   for (const r of active) {
     const keyName = r.groupName ?? r.category ?? 'Muu';
@@ -41,6 +44,14 @@ export async function GET() {
       price_eur: typeof r.priceCents === 'number' ? r.priceCents / 100 : null,
     });
   }
+
+  // Log group sizes
+  const dbg: Record<string, number> = {};
+  for (const r of active) {
+    const k = r.groupName ?? r.category ?? 'Muu';
+    dbg[k] = (dbg[k] ?? 0) + 1;
+  }
+  console.log('[api/products] groups:', dbg);
 
   // Sort groups and items
   const out = Object.entries(groups)
