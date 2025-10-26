@@ -1,61 +1,49 @@
-import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
-export async function GET() {
-  try {
-    // Return mock data for now
-    const mockProducts = [
-      {
-        sku: 'PORK-001',
-        name: 'Esimene veerand',
-        category: 'Värske sealiha',
-        uom: 'TK',
-        catch_weight: false,
-        active: true,
-        currentPrice: 95.00
-      },
-      {
-        sku: 'PORK-002',
-        name: 'Tagumine veerand',
-        category: 'Värske sealiha',
-        uom: 'TK',
-        catch_weight: false,
-        active: true,
-        currentPrice: 70.00
-      },
-      {
-        sku: 'PORK-003',
-        name: 'Keskosa',
-        category: 'Värske sealiha',
-        uom: 'TK',
-        catch_weight: false,
-        active: true,
-        currentPrice: 85.00
-      },
-      {
-        sku: 'PORK-004',
-        name: 'Pool siga',
-        category: 'Värske sealiha',
-        uom: 'TK',
-        catch_weight: false,
-        active: true,
-        currentPrice: 150.00
-      },
-      {
-        sku: 'PORK-005',
-        name: 'Terve siga',
-        category: 'Värske sealiha',
-        uom: 'TK',
-        catch_weight: false,
-        active: true,
-        currentPrice: 310.00
-      }
-    ];
-    
-    return NextResponse.json({ ok: true, items: mockProducts });
-  } catch (error) {
-    console.error('Products fetch error:', error);
-    return NextResponse.json({ ok: false, error: "Server error" }, { status: 500 });
-  }
+function sb() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  return createClient(url, key, { auth: { persistSession: false } });
 }
 
+export async function GET() {
+  console.log('[api/products] handler start');
+  const client = sb();
+  
+  const tries = [
+    { table: 'products', cols: 'id, group_name, name, unit, price_cents' },
+    { table: 'Product',  cols: 'id, group_name, name, unit, price_cents' },
+  ];
+  
+  for (const t of tries) {
+    const { data, error } = await client.from<any>(t.table).select(t.cols);
+    if (error) {
+      console.error('[api/products]', t.table, 'error:', error.message);
+      continue;
+    }
+    if (!Array.isArray(data)) {
+      console.error('[api/products]', t.table, 'non-array payload');
+      continue;
+    }
+
+    const groups: any = {};
+    for (const row of data) {
+      if (!groups[row.group_name]) groups[row.group_name] = [];
+      groups[row.group_name].push({
+        id: row.id,
+        name: row.name,
+        unit: row.unit,
+        price_cents: row.price_cents,
+        price_eur: row.price_cents ? (row.price_cents / 100) : null
+      });
+    }
+
+    return NextResponse.json(Object.entries(groups).map(([group, products]) => ({ group, products })));
+  }
+  
+  return NextResponse.json({ error: 'products table not found' }, { status: 500 });
+}
