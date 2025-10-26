@@ -15,8 +15,8 @@ export async function GET() {
   const client = sb();
   
   const tries = [
-    { table: 'products', cols: 'id, group_name, name, unit, price_cents' },
-    { table: 'Product',  cols: 'id, group_name, name, unit, price_cents' },
+    { table: 'products', cols: 'id, "groupName", name, unit, "priceCents"' },
+    { table: 'Product',  cols: 'id, "groupName", name, unit, "priceCents"' },
   ];
   
   for (const t of tries) {
@@ -32,13 +32,14 @@ export async function GET() {
 
     const groups: any = {};
     for (const row of data) {
-      if (!groups[row.group_name]) groups[row.group_name] = [];
-      groups[row.group_name].push({
+      const group = row.groupName || row.group_name || 'Unknown';
+      if (!groups[group]) groups[group] = [];
+      groups[group].push({
         id: row.id,
         name: row.name,
         unit: row.unit,
-        price_cents: row.price_cents,
-        price_eur: row.price_cents ? (row.price_cents / 100) : null
+        price_cents: row.priceCents || row.price_cents,
+        price_eur: (row.priceCents || row.price_cents) ? ((row.priceCents || row.price_cents) / 100) : null
       });
     }
 

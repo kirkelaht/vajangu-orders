@@ -109,6 +109,9 @@ model Product {
   sku          String     @id
   name         String
   category     String
+  group_name   String?    @map("groupName")
+  unit         String?
+  price_cents  Int?       @map("priceCents")
   uom          UOM
   catch_weight Boolean    @default(false) @map("catchWeight")
   active       Boolean    @default(true)

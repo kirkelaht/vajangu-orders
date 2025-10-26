@@ -36,10 +36,13 @@ const sb = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: fal
   
   const rows = groups.flatMap(g => g.products.map(p => ({
     id: p.id,
-    group_name: g.group,
+    groupName: g.group,
     name: p.name,
     unit: p.unit,
-    price_cents: p.price_cents ?? null
+    priceCents: p.price_cents ?? null,
+    category: g.group, // Use group as category
+    uom: p.unit === 'tk' ? 'TK' : 'KG',
+    active: true
   })));
 
   console.log(`📦 Upserting ${rows.length} products...`);
