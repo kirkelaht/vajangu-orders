@@ -35,7 +35,7 @@ const sb = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: fal
   const groups = cfg.groups ?? [];
   
   const rows = groups.flatMap(g => g.products.map(p => ({
-    id: p.id,
+    sku: p.id,
     groupName: g.group,
     name: p.name,
     unit: p.unit,
@@ -46,7 +46,7 @@ const sb = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: fal
   })));
 
   console.log(`📦 Upserting ${rows.length} products...`);
-  const { error } = await sb.from('Product').upsert(rows, { onConflict: 'id' });
+  const { error } = await sb.from('Product').upsert(rows, { onConflict: 'sku' });
   if (error) throw error;
   console.log(`✅ Synced ${rows.length} products from ${inputPath}`);
 })().catch(err => {
