@@ -87,6 +87,8 @@ export default function OrderPage(){
     async function loadProducts() {
       setLastError(null);
       setRawPayload(null);
+      let apiSucceeded = false;
+      
       // 1) Try API first
       try {
         const r = await fetch('/api/products', { cache: 'no-store' });
@@ -99,6 +101,7 @@ export default function OrderPage(){
             const cats = data.map((g: ApiProductGroup) => g.group);
             setCategories(cats);
           }
+          apiSucceeded = true;
           return;
         }
         if (Array.isArray((data as any).items) && (data as any).items.length > 0) {
@@ -121,40 +124,49 @@ export default function OrderPage(){
             const cats = grouped.map((g: any) => g.group);
             setCategories(cats);
           }
+          apiSucceeded = true;
           return;
         }
         // If we got here, data empty — fall through to static
-        if (!cancelled) setLastError('API returned empty or unrecognized shape, loading static fallback…');
+        if (!cancelled) {
+          console.log('[order page] API returned empty or unrecognized shape:', data);
+          setLastError('API returned empty or unrecognized shape, loading static fallback…');
+        }
       } catch (e:any) {
-        if (!cancelled) setLastError('API fetch failed: ' + (e?.message ?? 'unknown'));
+        if (!cancelled) {
+          console.error('[order page] API fetch failed:', e?.message);
+          setLastError('API fetch failed: ' + (e?.message ?? 'unknown'));
+        }
       }
 
       // 2) Static fallback from /public
-      try {
-        const r2 = await fetch('/products/2025-11.json', { cache: 'no-store' });
-        const json = await r2.json();
-        if (!cancelled) setRawPayload(json);
-        if (Array.isArray(json.groups)) {
-          const transformed = json.groups.map((g: any) => ({
-            group: g.group,
-            products: g.products.map((p: any) => ({
-              id: p.id,
-              name: p.name,
-              unit: p.unit,
-              price_cents: p.price_cents,
-              price_eur: typeof p.price_cents === 'number' ? p.price_cents / 100 : null,
-            }))
-          }));
-          if (!cancelled) {
-            setProductGroups(transformed as ApiProductGroup[]);
-            const cats = transformed.map((g: ApiProductGroup) => g.group);
-            setCategories(cats);
+      if (!apiSucceeded) {
+        try {
+          const r2 = await fetch('/products/2025-11.json', { cache: 'no-store' });
+          const json = await r2.json();
+          if (!cancelled) setRawPayload(json);
+          if (Array.isArray(json.groups)) {
+            const transformed = json.groups.map((g: any) => ({
+              group: g.group,
+              products: g.products.map((p: any) => ({
+                id: p.id,
+                name: p.name,
+                unit: p.unit,
+                price_cents: p.price_cents,
+                price_eur: typeof p.price_cents === 'number' ? p.price_cents / 100 : null,
+              }))
+            }));
+            if (!cancelled) {
+              setProductGroups(transformed as ApiProductGroup[]);
+              const cats = transformed.map((g: ApiProductGroup) => g.group);
+              setCategories(cats);
+            }
+          } else {
+            if (!cancelled) setLastError('Fallback file missing groups[]');
           }
-        } else {
-          if (!cancelled) setLastError('Fallback file missing groups[]');
+        } catch (e:any) {
+          if (!cancelled) setLastError('Fallback fetch failed: ' + (e?.message ?? 'unknown'));
         }
-      } catch (e:any) {
-        if (!cancelled) setLastError('Fallback fetch failed: ' + (e?.message ?? 'unknown'));
       }
     }
     loadProducts();
