@@ -1,4 +1,5 @@
 // temporary redeploy fix
+// production fix: ensure routes are properly deployed
 import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 export async function GET() {
