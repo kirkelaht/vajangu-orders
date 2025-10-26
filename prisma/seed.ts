@@ -134,7 +134,7 @@ async function main() {
     data: {
       name: 'Jaeklientide hinnakiri',
       segment: 'RETAIL',
-      validFrom: new Date(),
+      valid_from: new Date(),
     },
   });
 
@@ -142,7 +142,7 @@ async function main() {
     data: {
       name: 'Restoranide hinnakiri',
       segment: 'RESTAURANT',
-      validFrom: new Date(),
+      valid_from: new Date(),
     },
   });
 
@@ -150,7 +150,7 @@ async function main() {
     data: {
       name: 'Hulgiklientide hinnakiri',
       segment: 'WHOLESALE',
-      validFrom: new Date(),
+      valid_from: new Date(),
     },
   });
 
