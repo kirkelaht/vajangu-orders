@@ -209,16 +209,16 @@ export default function OrderForm() {
                 <tr key={row.lineId} className="border-t">
                   <td className="p-2">{row.name}</td>
 
-                  {/* Kui tahad ridade kaupa kogust muuta, hoia see INPUT ainult rea enda state'i peal */}
                   <td className="p-2 text-right">
                     <input
                       type="number"
                       className="w-24 border rounded p-1 text-right"
                       min="0"
                       step="0.1"
-                      value={row.quantity}                         {/* 👈 rea kogus */}
+                      value={row.quantity}
                       onChange={(e) => updateRowQuantity(row.lineId, e.target.value)}
-                    /> {row.unit ?? 'tk'}
+                    />
+                    {' '}{row.unit ?? 'tk'}
                   </td>
 
                   <td className="p-2 text-right">
