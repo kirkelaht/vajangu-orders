@@ -16,6 +16,7 @@ export default function OrderPage(){
   const [rings,setRings]=useState<Ring[]>([]);
   const [stops,setStops]=useState<Stop[]>([]);
   const [products,setProducts]=useState<Product[]>([]);
+  const [productGroups,setProductGroups]=useState<{group: string, products: any[]}[]>([]);
   const [categories,setCategories]=useState<string[]>([]);
   const [selectedCategory,setSelectedCategory]=useState<string>("");
   const [productQuantities,setProductQuantities]=useState<{[key:string]:number}>({});
@@ -61,45 +62,16 @@ export default function OrderPage(){
       if(Array.isArray(j)) setRings(j);
     }).catch(console.error);
     fetch("/api/products").then(r=>r.json()).then(j=>{
-      if(j.ok) {
-        // Filter out custom products from customer view
-        const regularProducts = j.items.filter((p: Product) => p.category !== 'Kohandatud tooted');
-        setProducts(regularProducts);
-        const cats = [...new Set(regularProducts.map((p: Product)=>p.category))] as string[];
-        
-        // Sort categories with custom order
-        const sortedCats = cats.sort((a, b) => {
-          // Define the desired order
-          const categoryOrder = [
-            'Värske sealiha',
-            'Hakklihad',
-            'Ahju ja grillile',
-            'Hallika',
-            'Kulinaaria',
-            'Subproduktid',
-            'Suitsutooted ja konservid',
-            'Kinkekaart'
-          ];
-          
-          const aIndex = categoryOrder.indexOf(a);
-          const bIndex = categoryOrder.indexOf(b);
-          
-          // If both categories are in the defined order, sort by their position
-          if (aIndex !== -1 && bIndex !== -1) {
-            return aIndex - bIndex;
-          }
-          
-          // If only one category is in the defined order, prioritize it
-          if (aIndex !== -1) return -1;
-          if (bIndex !== -1) return 1;
-          
-          // For categories not in the defined order, sort alphabetically
-          return a.localeCompare(b);
-        });
-        
-        setCategories(sortedCats);
+      if(Array.isArray(j)) {
+        setProductGroups(j);
+        const cats = j.map(g => g.group);
+        setCategories(cats);
+      } else if(j.ok && Array.isArray(j.items)) {
+        setProducts(j.items);
+        const cats = [...new Set(j.items.map((p: Product)=>p.category))] as string[];
+        setCategories(cats);
       }
-    });
+    }).catch(console.error);
   },[]);
   
   useEffect(()=>{
@@ -113,47 +85,10 @@ export default function OrderPage(){
     }
   },[form.ring_id]);
 
-  // Filter products by category and sort special products to top for Värske sealiha and Hakklihad
-  const categoryProducts = products.filter(p => p.category === selectedCategory).sort((a, b) => {
-    if (selectedCategory === 'Värske sealiha') {
-      // Special products that should appear at the top in specific order
-      const specialProducts = ['PORK-002', 'PORK-011', 'PORK-003', 'PORK-057', 'PORK-004', 'PORK-058', 'PORK-005', 'PORK-060', 'PORK-006', 'PORK-059', 'PORK-014'];
-      const aIsSpecial = specialProducts.includes(a.sku);
-      const bIsSpecial = specialProducts.includes(b.sku);
-      
-      if (aIsSpecial && !bIsSpecial) return -1;
-      if (!aIsSpecial && bIsSpecial) return 1;
-      if (aIsSpecial && bIsSpecial) {
-        // Sort special products by their predefined order
-        return specialProducts.indexOf(a.sku) - specialProducts.indexOf(b.sku);
-      }
-    } else if (selectedCategory === 'Hakklihad') {
-      // Special products that should appear at the top for Hakklihad
-      const specialProducts = ['PORK-009']; // Seahakkliha
-      const aIsSpecial = specialProducts.includes(a.sku);
-      const bIsSpecial = specialProducts.includes(b.sku);
-      
-      if (aIsSpecial && !bIsSpecial) return -1;
-      if (!aIsSpecial && bIsSpecial) return 1;
-      if (aIsSpecial && bIsSpecial) {
-        // Sort special products by their predefined order
-        return specialProducts.indexOf(a.sku) - specialProducts.indexOf(b.sku);
-      }
-    } else if (selectedCategory === 'Suitsutooted ja konservid') {
-      // Special products that should appear in specific order for Suitsutooted ja konservid
-      const specialProducts = ['PORK-054', 'PORK-049', 'PORK-050', 'PORK-051']; // Lihased viinerid, Täissuitsuvorst sealihast, Sealiha konserv OKTOOBRIKUU PAKKUMINE, Sealiha konserv 12 tk OKTOOBRIKUU PAKKUMINE
-      const aIsSpecial = specialProducts.includes(a.sku);
-      const bIsSpecial = specialProducts.includes(b.sku);
-      
-      if (aIsSpecial && !bIsSpecial) return -1;
-      if (!aIsSpecial && bIsSpecial) return 1;
-      if (aIsSpecial && bIsSpecial) {
-        // Sort special products by their predefined order
-        return specialProducts.indexOf(a.sku) - specialProducts.indexOf(b.sku);
-      }
-    }
-    return a.name.localeCompare(b.name);
-  });
+  // Get products for selected category from grouped data
+  const categoryProducts = productGroups.length > 0 
+    ? productGroups.find(g => g.group === selectedCategory)?.products ?? []
+    : products.filter(p => p.category === selectedCategory);
   
   // Check if selected ring is for home delivery
   const selectedRing = rings.find((r: Ring) => r.id === form.ring_id);
