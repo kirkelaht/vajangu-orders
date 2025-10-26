@@ -32,9 +32,9 @@ export async function GET() {
 
     const groups: any = {};
     for (const row of data) {
-      const group = row.groupName || row.group_name || row.category || 'Unknown';
-      if (!groups[group]) groups[group] = [];
-      groups[group].push({
+      const key = row.groupName ?? row.category ?? 'Muu';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push({
         id: row.sku,
         name: row.name,
         unit: row.unit,
