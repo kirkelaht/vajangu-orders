@@ -582,18 +582,6 @@ export default function OrderPage(){
         </div>
       </div>
 
-      {/* Debug box */}
-      <div className="container mx-auto px-4 py-4">
-        <div className="text-sm text-gray-600 border rounded p-3 bg-gray-50">
-          <div><strong>Debug:</strong></div>
-          <div>Groups loaded: {Array.isArray(productGroups) ? productGroups.length : 0}</div>
-          {Array.isArray(productGroups) && productGroups.slice(0,3).map((g: ApiProductGroup) => (
-            <div key={g.group}>• {g.group}: {g.products?.length ?? 0} toodet</div>
-          ))}
-          {lastError && <div className="text-red-600 mt-2">Error: {lastError}</div>}
-        </div>
-      </div>
-
       {/* Footer matching the website */}
       <footer className="bg-gray-50 border-t border-gray-200 mt-12">
         <div className="container mx-auto px-4 py-8">
