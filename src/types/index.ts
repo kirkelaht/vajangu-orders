@@ -47,6 +47,9 @@ export interface Product {
   catch_weight: boolean;
   active: boolean;
   current_price?: number;
+  price_eur?: number;
+  price_cents?: number;
+  unit?: string;
 }
 
 export interface OrderLine {

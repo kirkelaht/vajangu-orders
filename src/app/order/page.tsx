@@ -50,7 +50,10 @@ export default function OrderPage(){
   const [customPrices,setCustomPrices]=useState<{[key:string]:number}>({});
 
   // Helper function to get display text for UOM, with special case for Puhastatud seasool
-  function getUomDisplayText(uom: string, sku: string): string {
+  function getUomDisplayText(uom: string, sku: string, product?: Product): string {
+    // If product has unit field from API, use it
+    if (product?.unit) return product.unit;
+    
     const uomLower = uom.toLowerCase();
     if (uomLower === 'tk' && sku === 'PORK-031') return 'meeter';
     return uomLower;
@@ -300,7 +303,7 @@ export default function OrderPage(){
                         <div key={p.sku} className="flex items-center space-x-4 p-4 border border-gray-300 rounded-lg">
                           <div className="flex-1">
                             <div className="flex items-center justify-between">
-                              <span className="text-gray-700 font-medium">{p.name} ({getUomDisplayText(p.uom, p.sku)})</span>
+                              <span className="text-gray-700 font-medium">{p.name} ({getUomDisplayText(p.uom, p.sku, p)})</span>
                               {p.sku === 'PORK-008' ? (
                                 <span className="text-lg font-bold text-blue-600">
                                   Küsi lisainfot
@@ -321,7 +324,7 @@ export default function OrderPage(){
                                 </div>
                               ) : (
                                 <span className="text-lg font-bold text-green-600">
-                                  {p.current_price ? `${p.current_price.toFixed(2)}€` : 'Hind puudub'}
+                                  {p.price_eur ? `${p.price_eur.toFixed(2)}€` : p.current_price ? `${p.current_price.toFixed(2)}€` : 'hind kokkuleppel'}
                                 </span>
                               )}
                             </div>
@@ -363,7 +366,7 @@ export default function OrderPage(){
                                 />
                                 <button 
                                   type="button" 
-                                  onClick={()=>addProduct(p.sku, p.name, p.uom, productQuantities[p.sku] || 1, p.current_price || 0)}
+                                  onClick={()=>addProduct(p.sku, p.name, p.uom, productQuantities[p.sku] || 1, p.price_eur || p.current_price || 0)}
                                   className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors">
                                   Lisa
                                 </button>
