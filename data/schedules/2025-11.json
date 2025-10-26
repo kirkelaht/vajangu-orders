@@ -1,0 +1,484 @@
+{
+  "year": 2025,
+  "month": 11,
+  "rings": [
+    {
+      "date": "2025-11-07",
+      "region": "Vändra–Enge ring",
+      "driver": "Marvi Laht",
+      "visibleFrom": "2025-11-01T00:00:00Z",
+      "visibleTo": "2025-11-07T23:59:59Z",
+      "cutoffAt": "2025-11-06T18:00:00Z",
+      "capacityOrders": 50,
+      "capacityKg": 1000,
+      "status": "OPEN",
+      "stops": [
+        {
+          "name": "Vändra",
+          "place": "Grossi poe parkla",
+          "orderIndex": 1
+        },
+        {
+          "name": "Tootsi",
+          "place": "bussijaama parkla",
+          "orderIndex": 2
+        },
+        {
+          "name": "Selja",
+          "place": "söökla parkla",
+          "orderIndex": 3
+        },
+        {
+          "name": "Sindi",
+          "place": "Coopi poe vastas parklas",
+          "orderIndex": 4
+        },
+        {
+          "name": "Paikuse",
+          "place": "Coopi poe vastas turu parklas",
+          "orderIndex": 5
+        },
+        {
+          "name": "Pärnu",
+          "place": "Port Arturi 2 vastas jõe äärne parkla",
+          "orderIndex": 6
+        },
+        {
+          "name": "Sauga",
+          "place": "Täkupoisi tankla",
+          "orderIndex": 7
+        },
+        {
+          "name": "Are",
+          "place": "vana Meierei parkla",
+          "orderIndex": 8
+        },
+        {
+          "name": "Pärnu-Jaagupi",
+          "place": "turu parkla",
+          "orderIndex": 9
+        },
+        {
+          "name": "Libatse",
+          "place": "maantee ääres poe parkla",
+          "orderIndex": 10
+        },
+        {
+          "name": "Enge",
+          "place": "Olerexi tankla",
+          "orderIndex": 11
+        }
+      ]
+    },
+    {
+      "date": "2025-11-12",
+      "region": "Järva-Jaani–Kõmsi ring",
+      "driver": "Marvi Laht",
+      "visibleFrom": "2025-11-08T00:00:00Z",
+      "visibleTo": "2025-11-12T23:59:59Z",
+      "cutoffAt": "2025-11-11T18:00:00Z",
+      "capacityOrders": 50,
+      "capacityKg": 1000,
+      "status": "OPEN",
+      "stops": [
+        {
+          "name": "Järva-Jaani",
+          "place": "turu parkla",
+          "orderIndex": 1
+        },
+        {
+          "name": "Roosna-Alliku",
+          "place": "külastuspunkt",
+          "orderIndex": 2
+        },
+        {
+          "name": "Paide",
+          "place": "kesklinn parkla",
+          "orderIndex": 3
+        },
+        {
+          "name": "Türi",
+          "place": "kesklinn parkla",
+          "orderIndex": 4
+        },
+        {
+          "name": "Käru",
+          "place": "külastuspunkt",
+          "orderIndex": 5
+        },
+        {
+          "name": "Lelle",
+          "place": "parkla",
+          "orderIndex": 6
+        },
+        {
+          "name": "Kehtna",
+          "place": "kesklinn parkla",
+          "orderIndex": 7
+        },
+        {
+          "name": "Rapla",
+          "place": "kesklinn parkla",
+          "orderIndex": 8
+        },
+        {
+          "name": "Märjamaa",
+          "place": "kesklinn parkla",
+          "orderIndex": 9
+        },
+        {
+          "name": "Laukna",
+          "place": "külastuspunkt",
+          "orderIndex": 10
+        },
+        {
+          "name": "Koluvere",
+          "place": "külastuspunkt",
+          "orderIndex": 11
+        },
+        {
+          "name": "Kullamaa",
+          "place": "külastuspunkt",
+          "orderIndex": 12
+        },
+        {
+          "name": "Lihula",
+          "place": "kesklinn parkla",
+          "orderIndex": 13
+        },
+        {
+          "name": "Kõmsi",
+          "place": "külastuspunkt",
+          "orderIndex": 14
+        }
+      ]
+    },
+    {
+      "date": "2025-11-19",
+      "region": "Kose–Haapsalu ring",
+      "driver": "Marvi Laht",
+      "visibleFrom": "2025-11-15T00:00:00Z",
+      "visibleTo": "2025-11-19T23:59:59Z",
+      "cutoffAt": "2025-11-18T18:00:00Z",
+      "capacityOrders": 50,
+      "capacityKg": 1000,
+      "status": "OPEN",
+      "stops": [
+        {
+          "name": "Kose",
+          "place": "kesklinn parkla",
+          "orderIndex": 1
+        },
+        {
+          "name": "Keila",
+          "place": "kesklinn parkla",
+          "orderIndex": 2
+        },
+        {
+          "name": "Vasalemma",
+          "place": "külastuspunkt",
+          "orderIndex": 3
+        },
+        {
+          "name": "Ämari",
+          "place": "külastuspunkt",
+          "orderIndex": 4
+        },
+        {
+          "name": "Riisipere",
+          "place": "külastuspunkt",
+          "orderIndex": 5
+        },
+        {
+          "name": "Turba",
+          "place": "külastuspunkt",
+          "orderIndex": 6
+        },
+        {
+          "name": "Risti",
+          "place": "külastuspunkt",
+          "orderIndex": 7
+        },
+        {
+          "name": "Palivere",
+          "place": "külastuspunkt",
+          "orderIndex": 8
+        },
+        {
+          "name": "Taebla",
+          "place": "külastuspunkt",
+          "orderIndex": 9
+        },
+        {
+          "name": "Linnamäe",
+          "place": "külastuspunkt",
+          "orderIndex": 10
+        },
+        {
+          "name": "Haapsalu",
+          "place": "kesklinn parkla",
+          "orderIndex": 11
+        }
+      ]
+    },
+    {
+      "date": "2025-11-26",
+      "region": "Rakke–Viljandi ring",
+      "driver": "Marvi Laht",
+      "visibleFrom": "2025-11-22T00:00:00Z",
+      "visibleTo": "2025-11-26T23:59:59Z",
+      "cutoffAt": "2025-11-25T18:00:00Z",
+      "capacityOrders": 50,
+      "capacityKg": 1000,
+      "status": "OPEN",
+      "stops": [
+        {
+          "name": "Rakke",
+          "place": "kesklinn parkla",
+          "orderIndex": 1
+        },
+        {
+          "name": "Jõgeva",
+          "place": "kesklinn parkla",
+          "orderIndex": 2
+        },
+        {
+          "name": "Tartu",
+          "place": "kesklinn parkla",
+          "orderIndex": 3
+        },
+        {
+          "name": "Elva",
+          "place": "kesklinn parkla",
+          "orderIndex": 4
+        },
+        {
+          "name": "Rõngu",
+          "place": "külastuspunkt",
+          "orderIndex": 5
+        },
+        {
+          "name": "Tõrva",
+          "place": "kesklinn parkla",
+          "orderIndex": 6
+        },
+        {
+          "name": "Helme",
+          "place": "külastuspunkt",
+          "orderIndex": 7
+        },
+        {
+          "name": "Ala",
+          "place": "külastuspunkt",
+          "orderIndex": 8
+        },
+        {
+          "name": "Karksi-Nuia",
+          "place": "kesklinn parkla",
+          "orderIndex": 9
+        },
+        {
+          "name": "Abja-Paluoja",
+          "place": "kesklinn parkla",
+          "orderIndex": 10
+        },
+        {
+          "name": "Kulla",
+          "place": "külastuspunkt",
+          "orderIndex": 11
+        },
+        {
+          "name": "Halliste",
+          "place": "külastuspunkt",
+          "orderIndex": 12
+        },
+        {
+          "name": "Õisu",
+          "place": "külastuspunkt",
+          "orderIndex": 13
+        },
+        {
+          "name": "Sultsi",
+          "place": "külastuspunkt",
+          "orderIndex": 14
+        },
+        {
+          "name": "Viljandi",
+          "place": "kesklinn parkla",
+          "orderIndex": 15
+        }
+      ]
+    },
+    {
+      "date": "2025-11-28",
+      "region": "Aravete–Maardu ring",
+      "driver": "Marvi Laht",
+      "visibleFrom": "2025-11-24T00:00:00Z",
+      "visibleTo": "2025-11-28T23:59:59Z",
+      "cutoffAt": "2025-11-27T18:00:00Z",
+      "capacityOrders": 50,
+      "capacityKg": 1000,
+      "status": "OPEN",
+      "stops": [
+        {
+          "name": "Aravete",
+          "place": "külastuspunkt",
+          "orderIndex": 1
+        },
+        {
+          "name": "Jäneda",
+          "place": "külastuspunkt",
+          "orderIndex": 2
+        },
+        {
+          "name": "Aegviidu",
+          "place": "kesklinn parkla",
+          "orderIndex": 3
+        },
+        {
+          "name": "Anija",
+          "place": "külastuspunkt",
+          "orderIndex": 4
+        },
+        {
+          "name": "Kehra",
+          "place": "kesklinn parkla",
+          "orderIndex": 5
+        },
+        {
+          "name": "Raasiku",
+          "place": "külastuspunkt",
+          "orderIndex": 6
+        },
+        {
+          "name": "Aruküla",
+          "place": "külastuspunkt",
+          "orderIndex": 7
+        },
+        {
+          "name": "Jüri",
+          "place": "kesklinn parkla",
+          "orderIndex": 8
+        },
+        {
+          "name": "Kiili",
+          "place": "kesklinn parkla",
+          "orderIndex": 9
+        },
+        {
+          "name": "Luige",
+          "place": "külastuspunkt",
+          "orderIndex": 10
+        },
+        {
+          "name": "Saku",
+          "place": "kesklinn parkla",
+          "orderIndex": 11
+        },
+        {
+          "name": "Ääsmäe",
+          "place": "külastuspunkt",
+          "orderIndex": 12
+        },
+        {
+          "name": "Saue",
+          "place": "kesklinn parkla",
+          "orderIndex": 13
+        },
+        {
+          "name": "Tallinn (Tondi)",
+          "place": "Peatuskoht",
+          "orderIndex": 14
+        },
+        {
+          "name": "Tallinn (Lasnamäe)",
+          "place": "Peatuskoht",
+          "orderIndex": 15
+        },
+        {
+          "name": "Mähe",
+          "place": "külastuspunkt",
+          "orderIndex": 16
+        },
+        {
+          "name": "Muuga",
+          "place": "külastuspunkt",
+          "orderIndex": 17
+        },
+        {
+          "name": "Maardu",
+          "place": "kesklinn parkla",
+          "orderIndex": 18
+        }
+      ]
+    },
+    {
+      "date": "2025-11-30",
+      "region": "Koeru–Vändra ring",
+      "driver": "Marvi Laht",
+      "visibleFrom": "2025-11-26T00:00:00Z",
+      "visibleTo": "2025-11-30T23:59:59Z",
+      "cutoffAt": "2025-11-29T18:00:00Z",
+      "capacityOrders": 50,
+      "capacityKg": 1000,
+      "status": "OPEN",
+      "stops": [
+        {
+          "name": "Koeru",
+          "place": "kesklinn parkla",
+          "orderIndex": 1
+        },
+        {
+          "name": "Imavere",
+          "place": "külastuspunkt",
+          "orderIndex": 2
+        },
+        {
+          "name": "Võhma",
+          "place": "kesklinn parkla",
+          "orderIndex": 3
+        },
+        {
+          "name": "Olustvere",
+          "place": "külastuspunkt",
+          "orderIndex": 4
+        },
+        {
+          "name": "Suure-Jaani",
+          "place": "kesklinn parkla",
+          "orderIndex": 5
+        },
+        {
+          "name": "Vastemõisa",
+          "place": "külastuspunkt",
+          "orderIndex": 6
+        },
+        {
+          "name": "Savikoti",
+          "place": "külastuspunkt",
+          "orderIndex": 7
+        },
+        {
+          "name": "Kõpu",
+          "place": "külastuspunkt",
+          "orderIndex": 8
+        },
+        {
+          "name": "Kilingi-Nõmme",
+          "place": "kesklinn parkla",
+          "orderIndex": 9
+        },
+        {
+          "name": "Pärnu",
+          "place": "Port Arturi 2 vastas jõe äärne parkla",
+          "orderIndex": 10
+        },
+        {
+          "name": "Vändra",
+          "place": "Grossi poe parkla",
+          "orderIndex": 11
+        }
+      ]
+    }
+  ]
+}

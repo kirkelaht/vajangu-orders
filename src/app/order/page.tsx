@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Ring, Stop, Product } from "@/types";
-import { fetchRings, fetchStopsByRing } from "@/lib/data";
 
 // Form-specific order line type
 interface FormOrderLine {
@@ -57,8 +56,10 @@ export default function OrderPage(){
   }
 
   useEffect(()=>{ 
-    // Fetch rings using Supabase client
-    fetchRings().then(setRings).catch(console.error);
+    // Fetch rings from API
+    fetch("/api/rings").then(r=>r.json()).then(j=>{
+      if(Array.isArray(j)) setRings(j);
+    }).catch(console.error);
     fetch("/api/products").then(r=>r.json()).then(j=>{
       if(j.ok) {
         // Filter out custom products from customer view
@@ -103,8 +104,10 @@ export default function OrderPage(){
   
   useEffect(()=>{
     if(form.ring_id) {
-      // Fetch stops using Supabase client
-      fetchStopsByRing(form.ring_id).then(setStops).catch(console.error);
+      // Fetch stops from API
+      fetch(`/api/stops?ringId=${encodeURIComponent(form.ring_id)}`).then(r=>r.json()).then(j=>{
+        if(Array.isArray(j)) setStops(j);
+      }).catch(console.error);
     } else {
       setStops([]);
     }

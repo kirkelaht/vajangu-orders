@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 
 type Body = {
@@ -136,26 +136,47 @@ export async function POST(req: Request) {
 
 export async function GET() {
   try {
-    const now = new Date();
+    // Return mock data for now
+    const mockRings = [
+      {
+        id: 'ring-1',
+        ring_date: '2025-11-07T00:00:00.000Z',
+        region: 'Vändra–Enge ring',
+        driver: null,
+        visible_from: '2025-11-07T00:00:00.000Z',
+        visible_to: null,
+        cutoff_at: '2025-11-06T18:00:00.000Z',
+        capacity_orders: null,
+        capacity_kg: null,
+        status: 'OPEN'
+      },
+      {
+        id: 'ring-2',
+        ring_date: '2025-11-12T00:00:00.000Z',
+        region: 'Järva-Jaani–Kõmsi ring',
+        driver: null,
+        visible_from: '2025-11-12T00:00:00.000Z',
+        visible_to: null,
+        cutoff_at: '2025-11-11T18:00:00.000Z',
+        capacity_orders: null,
+        capacity_kg: null,
+        status: 'OPEN'
+      },
+      {
+        id: 'ring-3',
+        ring_date: '2025-11-19T00:00:00.000Z',
+        region: 'Kose–Haapsalu ring',
+        driver: null,
+        visible_from: '2025-11-19T00:00:00.000Z',
+        visible_to: null,
+        cutoff_at: '2025-11-18T18:00:00.000Z',
+        capacity_orders: null,
+        capacity_kg: null,
+        status: 'OPEN'
+      }
+    ];
     
-    // Check if visibility filtering feature flag is enabled
-    const enableVisibilityFilter = process.env.NEXT_PUBLIC_ENABLE_VISIBILITY_FILTER === 'true';
-    
-    const whereClause: any = { 
-      ring_date: { gte: now },
-      status: "OPEN" 
-    };
-    
-    // Only apply visibility filter if feature flag is enabled
-    if (enableVisibilityFilter) {
-      whereClause.visible_from = { lte: now };
-    }
-    
-    const items = await prisma.ring.findMany({
-      where: whereClause,
-      orderBy: { ring_date: "asc" }
-    });
-    return NextResponse.json({ ok: true, items });
+    return NextResponse.json({ ok: true, items: mockRings });
   } catch (e: unknown) {
     console.error('GET /api/orders error:', e);
     return NextResponse.json({ ok: false, error: "Database connection failed" }, { status: 500 });
