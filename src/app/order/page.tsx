@@ -36,6 +36,8 @@ export default function OrderPage(){
   const [categories,setCategories]=useState<string[]>([]);
   const [selectedCategory,setSelectedCategory]=useState<string>("");
   const [productQuantities,setProductQuantities]=useState<{[key:string]:number}>({});
+  const [lastError,setLastError]=useState<string | null>(null);
+  const [rawPayload,setRawPayload]=useState<any>(null);
   const [form,setForm]=useState<{
     channel: string;
     customer: {
@@ -80,17 +82,84 @@ export default function OrderPage(){
     fetch("/api/rings").then(r=>r.json()).then(j=>{
       if(Array.isArray(j)) setRings(j);
     }).catch(console.error);
-    fetch("/api/products").then(r=>r.json()).then(j=>{
-      if(Array.isArray(j)) {
-        setProductGroups(j as ApiProductGroup[]);
-        const cats = j.map((g: ApiProductGroup) => g.group);
-        setCategories(cats);
-      } else if(j.ok && Array.isArray(j.items)) {
-        setProducts(j.items as unknown as Product[]);
-        const cats = [...new Set((j.items as Product[]).map((p: Product)=>p.category))] as string[];
-        setCategories(cats);
+    // Robust products fetching with static fallback
+    let cancelled = false;
+    async function loadProducts() {
+      setLastError(null);
+      setRawPayload(null);
+      // 1) Try API first
+      try {
+        const r = await fetch('/api/products', { cache: 'no-store' });
+        const data = await r.json();
+        if (!cancelled) setRawPayload(data);
+        // Accept either array shape or {items: []}
+        if (Array.isArray(data) && data.length > 0) {
+          if (!cancelled) {
+            setProductGroups(data as ApiProductGroup[]);
+            const cats = data.map((g: ApiProductGroup) => g.group);
+            setCategories(cats);
+          }
+          return;
+        }
+        if (Array.isArray((data as any).items) && (data as any).items.length > 0) {
+          // Transform flat items (category) to grouped array
+          const byGroup: Record<string, any[]> = {};
+          for (const item of (data as any).items) {
+            const key = item.groupName ?? item.category ?? 'Muu';
+            if (!byGroup[key]) byGroup[key] = [];
+            byGroup[key].push({
+              id: item.sku,
+              name: item.name,
+              unit: item.uom ?? item.unit ?? 'tk',
+              price_eur: typeof item.currentPrice === 'number' ? item.currentPrice : (typeof item.price_cents === 'number' ? item.price_cents/100 : null),
+              price_cents: item.price_cents ?? null,
+            });
+          }
+          const grouped = Object.entries(byGroup).map(([group, products]) => ({ group, products }));
+          if (!cancelled) {
+            setProductGroups(grouped as ApiProductGroup[]);
+            const cats = grouped.map((g: any) => g.group);
+            setCategories(cats);
+          }
+          return;
+        }
+        // If we got here, data empty — fall through to static
+        if (!cancelled) setLastError('API returned empty or unrecognized shape, loading static fallback…');
+      } catch (e:any) {
+        if (!cancelled) setLastError('API fetch failed: ' + (e?.message ?? 'unknown'));
       }
-    }).catch(console.error);
+
+      // 2) Static fallback from /public
+      try {
+        const r2 = await fetch('/products/2025-11.json', { cache: 'no-store' });
+        const json = await r2.json();
+        if (!cancelled) setRawPayload(json);
+        if (Array.isArray(json.groups)) {
+          const transformed = json.groups.map((g: any) => ({
+            group: g.group,
+            products: g.products.map((p: any) => ({
+              id: p.id,
+              name: p.name,
+              unit: p.unit,
+              price_cents: p.price_cents,
+              price_eur: typeof p.price_cents === 'number' ? p.price_cents / 100 : null,
+            }))
+          }));
+          if (!cancelled) {
+            setProductGroups(transformed as ApiProductGroup[]);
+            const cats = transformed.map((g: ApiProductGroup) => g.group);
+            setCategories(cats);
+          }
+        } else {
+          if (!cancelled) setLastError('Fallback file missing groups[]');
+        }
+      } catch (e:any) {
+        if (!cancelled) setLastError('Fallback fetch failed: ' + (e?.message ?? 'unknown'));
+      }
+    }
+    loadProducts();
+    
+    return () => { cancelled = true; };
   },[]);
   
   useEffect(()=>{
@@ -498,6 +567,18 @@ export default function OrderPage(){
               </div>
             </form>
           </div>
+        </div>
+      </div>
+
+      {/* Debug box */}
+      <div className="container mx-auto px-4 py-4">
+        <div className="text-sm text-gray-600 border rounded p-3 bg-gray-50">
+          <div><strong>Debug:</strong></div>
+          <div>Groups loaded: {Array.isArray(productGroups) ? productGroups.length : 0}</div>
+          {Array.isArray(productGroups) && productGroups.slice(0,3).map((g: ApiProductGroup) => (
+            <div key={g.group}>• {g.group}: {g.products?.length ?? 0} toodet</div>
+          ))}
+          {lastError && <div className="text-red-600 mt-2">Error: {lastError}</div>}
         </div>
       </div>
 

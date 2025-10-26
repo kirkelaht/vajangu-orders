@@ -1,50 +1,50 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-function sb() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createClient(url, key, { auth: { persistSession: false } });
-}
-
 export async function GET() {
-  console.log('[api/products] handler start');
-  const client = sb();
-  
-  const tries = [
-    { table: 'products', cols: 'sku, "groupName", name, unit, "priceCents", category' },
-    { table: 'Product',  cols: 'sku, "groupName", name, unit, "priceCents", category' },
-  ];
-  
-  for (const t of tries) {
-    const { data, error } = await client.from<any>(t.table).select(t.cols);
-    if (error) {
-      console.error('[api/products]', t.table, 'error:', error.message);
-      continue;
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const res = await fetch(`${url}/rest/v1/Product?select=sku,name,category,groupName,unit,priceCents,active`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      const msg = await res.text();
+      console.error('[api/products] REST error', res.status, msg);
+      return NextResponse.json({ error: msg }, { status: res.status });
     }
-    if (!Array.isArray(data)) {
-      console.error('[api/products]', t.table, 'non-array payload');
-      continue;
-    }
+    const rows: any[] = await res.json();
 
-    const groups: any = {};
-    for (const row of data) {
-      const key = row.groupName ?? row.category ?? 'Muu';
+    // (TEMP) no filtering — show everything to debug
+    // const active = rows.filter(r => r.active !== false);
+    const active = rows;
+
+    const groups: Record<string, any[]> = {};
+    for (const r of active) {
+      const key = r.groupName ?? r.category ?? 'Muu';
       if (!groups[key]) groups[key] = [];
       groups[key].push({
-        id: row.sku,
-        name: row.name,
-        unit: row.unit,
-        price_cents: row.priceCents || row.price_cents,
-        price_eur: (row.priceCents || row.price_cents) ? ((row.priceCents || row.price_cents) / 100) : null
+        id: r.sku,
+        name: r.name,
+        unit: r.unit ?? 'tk',
+        price_cents: r.priceCents ?? null,
+        price_eur: typeof r.priceCents === 'number' ? r.priceCents / 100 : null,
       });
     }
 
-    return NextResponse.json(Object.entries(groups).map(([group, products]) => ({ group, products })));
+    const out = Object.entries(groups)
+      .sort(([a],[b]) => a.localeCompare(b, 'et'))
+      .map(([group, products]) => ({
+        group,
+        products: (products as any[]).sort((a,b) => String(a.name).localeCompare(String(b.name),'et'))
+      }));
+
+    return NextResponse.json(out);
+  } catch (e:any) {
+    console.error('[api/products] fatal', e?.message);
+    return NextResponse.json({ error: e?.message ?? 'fatal' }, { status: 500 });
   }
-  
-  return NextResponse.json({ error: 'products table not found' }, { status: 500 });
 }

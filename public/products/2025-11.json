@@ -1,0 +1,89 @@
+{
+  "month": "2025-11",
+  "groups": [
+    {
+      "group": "Värske sealiha",
+      "products": [
+        { "id": "sealiha-1-16kg", "name": "Sealiha 1–16 kg (OKTOOBRIKUU PAKKUMINE)", "unit": "kg", "price_cents": 450 },
+        { "id": "veerand-esimene", "name": "Esimene veerand", "unit": "kg", "price_cents": 395 },
+        { "id": "veerand-tagumine", "name": "Tagumine veerand", "unit": "kg", "price_cents": 385 },
+        { "id": "keskosa", "name": "Keskosa", "unit": "kg", "price_cents": 580 },
+        { "id": "pool-siga", "name": "Pool siga", "unit": "kg", "price_cents": 385 },
+        { "id": "terve-siga", "name": "Terve siga", "unit": "kg", "price_cents": 385 },
+        { "id": "porsas-grillimiseks", "name": "Põrsas grillimiseks/suitsutamiseks/lõkkel", "unit": "kg", "price_cents": 850 }
+      ]
+    },
+    {
+      "group": "Hakklihad",
+      "products": [
+        { "id": "kodune-hakkliha", "name": "Kodune hakkliha (50% siga / 50% veis)", "unit": "kg", "price_cents": 1150 },
+        { "id": "seahakkliha", "name": "Seahakkliha", "unit": "kg", "price_cents": 530 },
+        { "id": "delikatess-hakkliha", "name": "Delikatess hakkliha", "unit": "kg", "price_cents": 895 },
+        { "id": "veis-hakkliha", "name": "Veise hakkliha", "unit": "kg", "price_cents": 1250 }
+      ]
+    },
+    {
+      "group": "Ahju ja grillile",
+      "products": [
+        { "id": "aadika-saslokk", "name": "Äädika šašlõkk (OKTOOBRIKUU PAKKUMINE)", "unit": "kg", "price_cents": 695 },
+        { "id": "mahlane-saslokk", "name": "Mahlane šašlõkk", "unit": "kg", "price_cents": 560 },
+        { "id": "ahjuvorst-seasooles", "name": "Ahjuvorst seasooles", "unit": "kg", "price_cents": 820 },
+        { "id": "ahjuvorst-vormis", "name": "Ahjuvorst vormis (ca 1.1–1.2 kg)", "unit": "kg", "price_cents": 820 },
+        { "id": "maitsestatud-ahjupraad", "name": "Maitsestatud ahjupraad", "unit": "kg", "price_cents": 795 },
+        { "id": "koodisteik-marinaadis", "name": "Koodisteik lõunapärases marinaadis", "unit": "kg", "price_cents": 495 },
+        { "id": "praelõik-kamaraga", "name": "Praelõik kamaraga", "unit": "kg", "price_cents": 650 }
+      ]
+    },
+    {
+      "group": "Kulinaaria",
+      "products": [
+        { "id": "seljakarbonaadi-loik", "name": "Seljakarbonaadi lõik", "unit": "kg", "price_cents": 650 },
+        { "id": "sealiha-guljass", "name": "Sealiha guljašš (OKTOOBRIKUU PAKKUMINE)", "unit": "kg", "price_cents": 710 },
+        { "id": "paneeritud-kotlet", "name": "Paneeritud sealihakotlet", "unit": "kg", "price_cents": 730 },
+        { "id": "sealiha-snitser", "name": "Sealiha šnitsel (ca 400g, OKTOOBRIKUU PAKKUMINE)", "unit": "kg", "price_cents": 750 },
+        { "id": "paneeritud-snitser", "name": "Paneeritud sealiha šnitsel (ca 500g)", "unit": "kg", "price_cents": 860 },
+        { "id": "peekoniviil", "name": "Peekoniviil", "unit": "kg", "price_cents": 750 },
+        { "id": "delikatess-medaljon", "name": "Delikatess medaljon", "unit": "kg", "price_cents": 600 },
+        { "id": "soolapekk", "name": "Soolapekk", "unit": "kg", "price_cents": 480 }
+      ]
+    },
+    {
+      "group": "Subproduktid",
+      "products": [
+        { "id": "seakeel", "name": "Seakeel", "unit": "kg", "price_cents": 550 },
+        { "id": "seasüda", "name": "Seasüda", "unit": "kg", "price_cents": 385 },
+        { "id": "seamaks", "name": "Seamaks (OKTOOBRIKUU PAKKUMINE)", "unit": "kg", "price_cents": 170 },
+        { "id": "seaneer", "name": "Seaneer", "unit": "kg", "price_cents": 160 },
+        { "id": "seapea", "name": "Seapea (OKTOOBRIKUU PAKKUMINE)", "unit": "kg", "price_cents": 15 },
+        { "id": "seasaba", "name": "Seasaba", "unit": "kg", "price_cents": 420 },
+        { "id": "seakõrv", "name": "Seakõrv", "unit": "kg", "price_cents": 375 },
+        { "id": "seakamar", "name": "Seakamar", "unit": "kg", "price_cents": 30 },
+        { "id": "rulaadikamar", "name": "Rulaadikamar", "unit": "kg", "price_cents": 100 },
+        { "id": "searagu", "name": "Searaguu", "unit": "kg", "price_cents": 175 },
+        { "id": "läbikasvanud-pekiliha", "name": "Läbikasvanud pekiliha", "unit": "kg", "price_cents": 380 },
+        { "id": "põseliha", "name": "Põseliha", "unit": "kg", "price_cents": 250 },
+        { "id": "sea-ploomirasv", "name": "Sea ploomirasv", "unit": "kg", "price_cents": 10 },
+        { "id": "seakondid", "name": "Seakondid lemmikutele", "unit": "kg", "price_cents": 70 },
+        { "id": "puhastatud-seasool", "name": "Puhastatud seasool", "unit": "meeter", "price_cents": 100 }
+      ]
+    },
+    {
+      "group": "Suitsutooted ja konservid",
+      "products": [
+        { "id": "tais-suitsuvorst", "name": "Täissuitsuvorst sealihast", "unit": "tk", "price_cents": 470 },
+        { "id": "sealiha-konserv-240g", "name": "Sealiha konserv (240 g)", "unit": "tk", "price_cents": 230 },
+        { "id": "sealiha-konserv-12tk", "name": "Sealiha konserv (12 tk karp)", "unit": "karp", "price_cents": 2500 },
+        { "id": "seamaksa-pasteet-240g", "name": "Seamaksa pasteet (240 g)", "unit": "tk", "price_cents": 200 },
+        { "id": "seamaksa-pasteet-12tk", "name": "Seamaksa pasteet (12 tk karp)", "unit": "karp", "price_cents": 2300 },
+        { "id": "lihaste-viinerid", "name": "Lihased viinerid", "unit": "kg", "price_cents": 750 }
+      ]
+    },
+    {
+      "group": "Kinkekaart",
+      "products": [
+        { "id": "kinkekaart", "name": "Kinkekaart", "unit": "tk", "price_cents": 0 }
+      ]
+    }
+  ]
+}
+
