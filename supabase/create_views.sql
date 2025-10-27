@@ -1,8 +1,12 @@
 -- Create views for routes API
 -- This creates views that the routes API can use to query rings and stops
 
+-- Drop existing views first
+DROP VIEW IF EXISTS vw_routes_full;
+DROP VIEW IF EXISTS vw_route_dates_map;
+
 -- View for full route information (ring + stops)
-CREATE OR REPLACE VIEW vw_routes_full AS
+CREATE VIEW vw_routes_full AS
 SELECT 
   r.id as route_id,
   r.region,
@@ -21,7 +25,7 @@ LEFT JOIN "Stop" s ON r.id = s."ringId"
 ORDER BY r."ringDate", s."order_index";
 
 -- View for route dates mapping
-CREATE OR REPLACE VIEW vw_route_dates_map AS
+CREATE VIEW vw_route_dates_map AS
 SELECT 
   id as route_id,
   region,
