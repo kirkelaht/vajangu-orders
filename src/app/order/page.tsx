@@ -10,6 +10,7 @@ type ApiProduct = {
   unit?: string | null;
   price_eur?: number | null;
   price_cents?: number | null;
+  sku?: string; // fallback for legacy products
 };
 
 // API ProductGroup type
@@ -417,23 +418,23 @@ export default function OrderPage(){
                     <h4 className="font-semibold text-gray-800 mb-4">{selectedCategory}</h4>
                     <div className="grid grid-cols-1 gap-4">
                       {categoryProducts.map((p: Product)=>(
-                        <div key={p.sku} className="flex items-center space-x-4 p-4 border border-gray-300 rounded-lg">
+                        <div key={p.id || p.sku} className="flex items-center space-x-4 p-4 border border-gray-300 rounded-lg">
                           <div className="flex-1">
                             <div className="flex items-center justify-between">
-                              <span className="text-gray-700 font-medium">{p.name} ({getUomDisplayText(p.uom, p.sku, p)})</span>
-                              {p.sku === 'PORK-008' ? (
+                              <span className="text-gray-700 font-medium">{p.name} ({getUomDisplayText(p.unit || 'tk', p.id, p)})</span>
+                              {p.id === 'PORK-008' ? (
                                 <span className="text-lg font-bold text-blue-600">
                                   Küsi lisainfot
                                 </span>
-                              ) : p.sku === 'PORK-056' ? (
+                              ) : (p.id || p.sku) === 'PORK-056' ? (
                                 <div className="flex items-center space-x-2">
                                   <span className="text-sm text-gray-600">Hind:</span>
                                   <input
                                     type="number"
                                     min="0"
                                     step="0.01"
-                                    value={customPrices[p.sku] || ''}
-                                    onChange={(e) => setCustomPrices({...customPrices, [p.sku]: parseFloat(e.target.value) || 0})}
+                                    value={customPrices[p.id || p.sku || ''] || ''}
+                                    onChange={(e) => setCustomPrices({...customPrices, [p.id || p.sku || '']: parseFloat(e.target.value) || 0})}
                                     placeholder="0.00"
                                     className="w-20 p-1 border border-gray-300 rounded text-center focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                                   />
@@ -447,25 +448,25 @@ export default function OrderPage(){
                             </div>
                           </div>
                           <div className="flex items-center space-x-3">
-                            {p.sku === 'PORK-008' ? (
+                            {(p.id || p.sku) === 'PORK-008' ? (
                               <div className="text-sm text-gray-600 italic">
                                 Kontakteeru meiega hinna ja koguse kohta
                               </div>
-                            ) : p.sku === 'PORK-056' ? (
+                            ) : (p.id || p.sku) === 'PORK-056' ? (
                               <>
                                 <label className="text-sm text-gray-600">Kogus:</label>
                                 <input 
                                   type="number" 
                                   min="1" 
                                   step="1" 
-                                  value={productQuantities[p.sku] || 1}
-                                  onChange={(e) => setProductQuantities({...productQuantities, [p.sku]: parseInt(e.target.value) || 1})}
+                                  value={productQuantities[p.id || p.sku || ''] || 1}
+                                  onChange={(e) => setProductQuantities({...productQuantities, [p.id || p.sku || '']: parseInt(e.target.value) || 1})}
                                   className="w-20 p-2 border border-gray-300 rounded text-center focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                                 />
                                 <button 
                                   type="button" 
-                                  onClick={()=>addProduct(p.sku, p.name, p.uom, productQuantities[p.sku] || 1, customPrices[p.sku] || 0)}
-                                  disabled={!customPrices[p.sku] || customPrices[p.sku] <= 0}
+                                  onClick={()=>addProduct(p.id || p.sku || '', p.name, p.unit || p.uom || 'tk', productQuantities[p.id || p.sku || ''] || 1, customPrices[p.id || p.sku || ''] || 0)}
+                                  disabled={!customPrices[p.id || p.sku || ''] || customPrices[p.id || p.sku || ''] <= 0}
                                   className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                                   Lisa
                                 </button>
@@ -477,17 +478,17 @@ export default function OrderPage(){
                                   type="number" 
                                   min="0.1" 
                                   step="0.1" 
-                                  value={productQuantities[p.sku] || ''}
-                                  onChange={(e) => setProductQuantities({...productQuantities, [p.sku]: parseFloat(e.target.value) || 0})}
+                                  value={productQuantities[p.id || p.sku || ''] || ''}
+                                  onChange={(e) => setProductQuantities({...productQuantities, [p.id || p.sku || '']: parseFloat(e.target.value) || 0})}
                                   className="w-20 p-2 border border-gray-300 rounded text-center focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                                   placeholder="0.0"
                                 />
                                 <button 
                                   type="button" 
-                                  onClick={()=>addProduct(p.sku, p.name, p.uom, productQuantities[p.sku], p.price_eur || p.current_price || 0)}
-                                  disabled={!productQuantities[p.sku] || productQuantities[p.sku] <= 0}
+                                  onClick={()=>addProduct(p.id || p.sku || '', p.name, p.unit || 'tk', productQuantities[p.id || p.sku || ''], p.price_eur || p.current_price || 0)}
+                                  disabled={!productQuantities[p.id || p.sku || ''] || productQuantities[p.id || p.sku || ''] <= 0}
                                   className={`px-4 py-2 rounded transition-colors ${
-                                    !productQuantities[p.sku] || productQuantities[p.sku] <= 0
+                                    !productQuantities[p.id || p.sku || ''] || productQuantities[p.id || p.sku || ''] <= 0
                                       ? 'bg-gray-400 cursor-not-allowed text-white'
                                       : 'bg-green-600 text-white hover:bg-green-700'
                                   }`}
