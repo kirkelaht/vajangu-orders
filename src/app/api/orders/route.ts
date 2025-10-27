@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-import { sendOrderConfirmationEmail } from "@/lib/email";
+import { createClient } from '@supabase/supabase-js';
+// import { sendOrderConfirmationEmail } from "@/lib/email";
+
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    throw new Error('Missing Supabase environment variables');
+  }
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
 type Body = {
   channel: "veeb" | "telefon" | "FB" | "e_post";
@@ -17,6 +26,22 @@ type Body = {
 export async function POST(req: Request) {
   try {
     const b = (await req.json()) as Body;
+    
+    // TEMPORARY: Return helpful error until Supabase is fully configured
+    return NextResponse.json({
+      ok: false,
+      error: 'Order submission requires database setup. Please configure Supabase environment variables.'
+    }, { status: 503 });
+    
+    /* ORIGINAL IMPLEMENTATION - TO BE RESTORED AFTER SUPABASE SETUP
+    // Check if Supabase is configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('[api/orders] Missing Supabase configuration');
+      return NextResponse.json({
+        ok: false,
+        error: 'Order system is temporarily unavailable. Please contact us directly.'
+      }, { status: 503 });
+    }
 
     // 1) minimaalne validatsioon
     if(!b?.customer?.email || !b?.customer?.phone || !b.ring_id || !b.stop_id || !b.order_lines?.length){
@@ -24,16 +49,21 @@ export async function POST(req: Request) {
     }
 
     // 2) cutoff kontroll
-    const ring = await prisma.ring.findUnique({ where:{ id: b.ring_id } });
-    if(!ring) return NextResponse.json({ok:false, error:"Ring not found"},{status:404});
+    const sb = getSupabase();
+    const { data: ring, error: ringError } = await sb.from('Ring').select('id, region, cutoffAt, ringDate').eq('id', b.ring_id).single();
+    
+    if (ringError || !ring) {
+      return NextResponse.json({ok:false, error:"Ring not found"},{status:404});
+    }
 
     const now = new Date();
-    if(now > ring.cutoff_at){
+    if (ring.cutoffAt && now > new Date(ring.cutoffAt)) {
       return NextResponse.json({ok:false, error:"Cutoff passed for this ring"},{status:422});
     }
 
     // Check if this is home delivery ring
     const isHomeDelivery = ring.region === 'Viru-Nigula-Sonda ring';
+    */
 
     // 3) duplikaadi hoiatus (sama phone+ring+stop viimase 24h jooksul)
     const dup = await prisma.order.findFirst({
