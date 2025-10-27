@@ -24,8 +24,8 @@ export async function GET() {
   // Query Supabase Ring table with camelCase columns
   const { data, error } = await client
     .from('Ring')
-    .select('id, region, ringDate, visibleFrom, visibleTo, cutoffAt')
-    .order('ringDate', { ascending: true });
+    .select('id, region, "ringDate", "visibleFrom", "visibleTo", "cutoffAt"')
+    .order('"ringDate"', { ascending: true });
 
   if (error) {
     console.error('[api/rings] error:', error.message);

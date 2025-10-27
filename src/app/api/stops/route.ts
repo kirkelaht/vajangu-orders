@@ -27,8 +27,8 @@ export async function GET(req: Request) {
   // Query Supabase Stop table
   const { data, error } = await client
     .from('Stop')
-    .select('id, ringId, name, place, order_index')
-    .eq('ringId', ringId)
+    .select('id, "ringId", name, place, order_index')
+    .eq('"ringId"', ringId)
     .order('order_index', { ascending: true });
 
   if (error) {
