@@ -349,8 +349,8 @@ export default function OrderPage(){
                     <select className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent" value={form.ring_id}
                       onChange={e=>setForm({...form, ring_id:e.target.value, stop_id:""})}>
                       <option value="">Vali ring</option>
-       {rings.map((r: Ring)=><option key={r.id} value={r.id}>
-         {new Date(r.ring_date).toLocaleDateString("et-EE", {day: '2-digit', month: '2-digit'})} {r.region}
+                      {rings.map((r: any)=><option key={r.id} value={r.id}>
+         {r.label || r.region}
        </option>)}
                     </select>
                   </div>
@@ -362,8 +362,8 @@ export default function OrderPage(){
                     <select className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent" value={form.stop_id}
                       onChange={e=>setForm({...form, stop_id:e.target.value})}>
                       <option value="">{isHomeDelivery ? "Vali piirkond" : "Vali peatus"}</option>
-                      {stops.map((s: Stop)=><option key={s.id} value={s.id}>
-                        {isHomeDelivery ? s.name : `${s.name} (${s.place})`}
+                      {stops.map((s: any)=><option key={s.id} value={s.id}>
+                        {s.label || s.name || ''}
                       </option>)}
                     </select>
                   </div>
