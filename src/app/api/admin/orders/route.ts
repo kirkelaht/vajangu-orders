@@ -14,15 +14,10 @@ export async function GET() {
   try {
     const sb = getSupabase();
     
-    // Fetch all orders with related data
+    // Fetch all orders
     const { data: orders, error } = await sb
       .from('Order')
-      .select(`
-        *,
-        Customer:customer_id (*),
-        Ring:ring_id (*),
-        Stop:stop_id (*)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -30,25 +25,63 @@ export async function GET() {
       return NextResponse.json({ ok: false, error: "Failed to fetch orders" }, { status: 500 });
     }
 
-    // Fetch order lines for each order
-    const ordersWithLines = await Promise.all(
+    // Fetch related data for each order
+    const ordersWithDetails = await Promise.all(
       (orders || []).map(async (order: any) => {
+        // Fetch customer
+        const { data: customer } = await sb
+          .from('Customer')
+          .select('*')
+          .eq('id', order.customer_id)
+          .single();
+
+        // Fetch ring
+        const { data: ring } = await sb
+          .from('Ring')
+          .select('*')
+          .eq('id', order.ring_id)
+          .single();
+
+        // Fetch stop
+        const { data: stop } = await sb
+          .from('Stop')
+          .select('*')
+          .eq('id', order.stop_id)
+          .single();
+
+        // Fetch order lines
         const { data: lines } = await sb
           .from('OrderLine')
-          .select(`
-            *,
-            Product:product_sku (*)
-          `)
+          .select('*')
           .eq('order_id', order.id);
-        
+
+        // Fetch products for each line
+        const linesWithProducts = await Promise.all(
+          (lines || []).map(async (line: any) => {
+            const { data: product } = await sb
+              .from('Product')
+              .select('*')
+              .eq('sku', line.product_sku || line.productSku)
+              .single();
+
+            return {
+              ...line,
+              product: product || null
+            };
+          })
+        );
+
         return {
           ...order,
-          lines: lines || []
+          customer: customer || null,
+          ring: ring || null,
+          stop: stop || null,
+          lines: linesWithProducts
         };
       })
     );
 
-    return NextResponse.json({ ok: true, orders: ordersWithLines });
+    return NextResponse.json({ ok: true, orders: ordersWithDetails });
   } catch (error) {
     console.error('Failed to fetch orders:', error);
     return NextResponse.json({ ok: false, error: "Failed to fetch orders" }, { status: 500 });
