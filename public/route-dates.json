@@ -1,0 +1,10 @@
+{
+  "routeDates": [
+    { "route_id": "vandra-enge", "dates": ["2025-11-07"] },
+    { "route_id": "jarva-jaani-komsi", "dates": ["2025-11-12"] },
+    { "route_id": "aravete-maardu", "dates": ["2025-11-14"] },
+    { "route_id": "kose-haapsalu", "dates": ["2025-11-19"] },
+    { "route_id": "jogeva-viljandi", "dates": ["2025-11-21"] },
+    { "route_id": "koeru-vandra", "dates": ["2025-11-26"] }
+  ]
+}
