@@ -15,22 +15,8 @@ export async function GET() {
   console.log('[api/rings] handler start');
   
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.warn('[api/rings] Missing Supabase environment variables, using mock data');
-    // Return mock November 2025 rings
-    const mockRings = [
-      { id: 'ring-1', region: 'Vändra–Enge ring', ringDate: '2025-11-07', label: '07.11 Vändra–Enge ring' },
-      { id: 'ring-2', region: 'Järva-Jaani–Kõmsi ring', ringDate: '2025-11-12', label: '12.11 Järva-Jaani–Kõmsi ring' },
-      { id: 'ring-3', region: 'Aravete–Maardu ring', ringDate: '2025-11-14', label: '14.11 Aravete–Maardu ring' },
-      { id: 'ring-4', region: 'Kose–Haapsalu ring', ringDate: '2025-11-19', label: '19.11 Kose–Haapsalu ring' },
-      { id: 'ring-5', region: 'Jõgeva–Viljandi ring', ringDate: '2025-11-21', label: '21.11 Jõgeva–Viljandi ring' },
-      { id: 'ring-6', region: 'Koeru–Vändra ring', ringDate: '2025-11-26', label: '26.11 Koeru–Vändra ring' },
-    ];
-    return NextResponse.json(mockRings.map(r => ({
-      id: r.id,
-      region: r.region,
-      dateISO: new Date(r.ringDate).toISOString(),
-      label: r.label
-    })));
+    console.error('[api/rings] Missing Supabase environment variables');
+    return NextResponse.json({ error: 'Database configuration missing' }, { status: 503 });
   }
   
   try {
@@ -44,21 +30,7 @@ export async function GET() {
 
     if (error) {
       console.error('[api/rings] error:', error.message);
-      // Fallback to mock data
-      const mockRings = [
-        { id: 'ring-1', region: 'Vändra–Enge ring', ringDate: '2025-11-07', label: '07.11 Vändra–Enge ring' },
-        { id: 'ring-2', region: 'Järva-Jaani–Kõmsi ring', ringDate: '2025-11-12', label: '12.11 Järva-Jaani–Kõmsi ring' },
-        { id: 'ring-3', region: 'Aravete–Maardu ring', ringDate: '2025-11-14', label: '14.11 Aravete–Maardu ring' },
-        { id: 'ring-4', region: 'Kose–Haapsalu ring', ringDate: '2025-11-19', label: '19.11 Kose–Haapsalu ring' },
-        { id: 'ring-5', region: 'Jõgeva–Viljandi ring', ringDate: '2025-11-21', label: '21.11 Jõgeva–Viljandi ring' },
-        { id: 'ring-6', region: 'Koeru–Vändra ring', ringDate: '2025-11-26', label: '26.11 Koeru–Vändra ring' },
-      ];
-      return NextResponse.json(mockRings.map(r => ({
-        id: r.id,
-        region: r.region,
-        dateISO: new Date(r.ringDate).toISOString(),
-        label: r.label
-      })));
+      return NextResponse.json({ error: `Database error: ${error.message}` }, { status: 500 });
     }
 
     if (!Array.isArray(data)) {
@@ -77,20 +49,6 @@ export async function GET() {
     return NextResponse.json(items);
   } catch (err: any) {
     console.error('[api/rings] exception:', err.message);
-    // Return mock data on any error
-    const mockRings = [
-      { id: 'ring-1', region: 'Vändra–Enge ring', ringDate: '2025-11-07', label: '07.11 Vändra–Enge ring' },
-      { id: 'ring-2', region: 'Järva-Jaani–Kõmsi ring', ringDate: '2025-11-12', label: '12.11 Järva-Jaani–Kõmsi ring' },
-      { id: 'ring-3', region: 'Aravete–Maardu ring', ringDate: '2025-11-14', label: '14.11 Aravete–Maardu ring' },
-      { id: 'ring-4', region: 'Kose–Haapsalu ring', ringDate: '2025-11-19', label: '19.11 Kose–Haapsalu ring' },
-      { id: 'ring-5', region: 'Jõgeva–Viljandi ring', ringDate: '2025-11-21', label: '21.11 Jõgeva–Viljandi ring' },
-      { id: 'ring-6', region: 'Koeru–Vändra ring', ringDate: '2025-11-26', label: '26.11 Koeru–Vändra ring' },
-    ];
-    return NextResponse.json(mockRings.map(r => ({
-      id: r.id,
-      region: r.region,
-      dateISO: new Date(r.ringDate).toISOString(),
-      label: r.label
-    })));
+    return NextResponse.json({ error: `Server error: ${err.message}` }, { status: 500 });
   }
 }

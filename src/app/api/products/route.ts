@@ -8,8 +8,8 @@ export async function GET() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !key) {
-    console.warn('[api/products] Missing Supabase envs, using static fallback');
-    return NextResponse.json({ error: 'using fallback - check static data' }, { status: 200 }); // Let frontend handle fallback
+    console.error('[api/products] Missing Supabase environment variables');
+    return NextResponse.json({ error: 'Database configuration missing' }, { status: 503 });
   }
 
   try {
@@ -22,8 +22,7 @@ export async function GET() {
     if (!res.ok) {
       const text = await res.text();
       console.error('[api/products] REST error', res.status, text);
-      // Return empty array to trigger frontend fallback
-      return NextResponse.json([]);
+      return NextResponse.json({ error: `Database error: ${text}` }, { status: res.status });
     }
 
     const rows: any[] = await res.json();
@@ -67,7 +66,6 @@ export async function GET() {
     return NextResponse.json(out);
   } catch (err: any) {
     console.error('[api/products] exception:', err.message);
-    // Return empty array to trigger frontend fallback
-    return NextResponse.json([]);
+    return NextResponse.json({ error: `Server error: ${err.message}` }, { status: 500 });
   }
 }

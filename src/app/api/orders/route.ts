@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from '@supabase/supabase-js';
-// import { sendOrderConfirmationEmail } from "@/lib/email";
 
 function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
     throw new Error('Missing Supabase environment variables');
   }
@@ -20,20 +19,13 @@ type Body = {
   notes_customer?: string;
   notes_internal?: string;
   payment_method: "sularaha"|"ülekandega";
-  order_lines: Array<{ sku:string; uom:"kg"|"tk"; ordered_qty:number; substitution_allowed?:boolean; unit_price?:number }>;
+  order_lines: Array< { sku:string; uom:"kg"|"tk"; ordered_qty:number; substitution_allowed?:boolean; unit_price?:number }>;
 };
 
 export async function POST(req: Request) {
   try {
     const b = (await req.json()) as Body;
     
-    // TEMPORARY: Return helpful error until Supabase is fully configured
-    return NextResponse.json({
-      ok: false,
-      error: 'Order submission requires database setup. Please configure Supabase environment variables.'
-    }, { status: 503 });
-    
-    /* ORIGINAL IMPLEMENTATION - TO BE RESTORED AFTER SUPABASE SETUP
     // Check if Supabase is configured
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
       console.error('[api/orders] Missing Supabase configuration');
@@ -43,14 +35,19 @@ export async function POST(req: Request) {
       }, { status: 503 });
     }
 
-    // 1) minimaalne validatsioon
+    // 1) Validation
     if(!b?.customer?.email || !b?.customer?.phone || !b.ring_id || !b.stop_id || !b.order_lines?.length){
       return NextResponse.json({ok:false, error:"Missing required fields"}, { status: 400 });
     }
 
-    // 2) cutoff kontroll
     const sb = getSupabase();
-    const { data: ring, error: ringError } = await sb.from('Ring').select('id, region, cutoffAt, ringDate').eq('id', b.ring_id).single();
+
+    // 2) Check ring exists and cutoff
+    const { data: ring, error: ringError } = await sb
+      .from('Ring')
+      .select('id, region, cutoffAt, ringDate')
+      .eq('id', b.ring_id)
+      .single();
     
     if (ringError || !ring) {
       return NextResponse.json({ok:false, error:"Ring not found"},{status:404});
@@ -61,46 +58,79 @@ export async function POST(req: Request) {
       return NextResponse.json({ok:false, error:"Cutoff passed for this ring"},{status:422});
     }
 
-    // Check if this is home delivery ring
     const isHomeDelivery = ring.region === 'Viru-Nigula-Sonda ring';
-    */
 
-    // 3) duplikaadi hoiatus (sama phone+ring+stop viimase 24h jooksul)
-    const dup = await prisma.order.findFirst({
-      where:{
-        customer: { phone: b.customer.phone },
-        ring_id: b.ring_id,
-        stop_id: b.stop_id,
-        created_at: { gte: new Date(Date.now() - 24*60*60*1000) }
-      },
-      select:{ id:true }
-    });
-    const duplicate = !!dup;
+    // 3) Check for duplicate orders (last 24h)
+    const { data: duplicateOrder } = await sb
+      .from('Order')
+      .select('id')
+      .eq('customer.phone', b.customer.phone)
+      .eq('ring_id', b.ring_id)
+      .eq('stop_id', b.stop_id)
+      .gte('created_at', new Date(Date.now() - 24*60*60*1000).toISOString())
+      .limit(1)
+      .single();
 
-    // 4) upsert customer
-    const customer = await prisma.customer.upsert({
-      where: { email: b.customer.email },
-      update: { 
-        name: b.customer.name, 
-        phone: b.customer.phone, 
-        org_name: b.customer.org_name || null,
-        reg_code: b.customer.reg_code || null
-      },
-      create: { 
-        name: b.customer.name, 
-        phone: b.customer.phone, 
-        email: b.customer.email, 
-        org_name: b.customer.org_name || null,
-        reg_code: b.customer.reg_code || null,
-        segment: "RETAIL" // Default to retail for public orders
+    // 4) Upsert customer
+    const { data: existingCustomer } = await sb
+      .from('Customer')
+      .select('id, name, phone, email, org_name, reg_code, segment')
+      .eq('email', b.customer.email)
+      .single();
+
+    let customerId: string;
+    if (existingCustomer) {
+      // Update existing customer
+      const { error: updateError } = await sb
+        .from('Customer')
+        .update({
+          name: b.customer.name,
+          phone: b.customer.phone,
+          org_name: b.customer.org_name || null,
+          reg_code: b.customer.reg_code || null
+        })
+        .eq('id', existingCustomer.id);
+      
+      if (updateError) {
+        console.error('[api/orders] Failed to update customer:', updateError);
+        return NextResponse.json({ok:false, error:"Failed to update customer"},{status:500});
       }
-    });
+      customerId = existingCustomer.id;
+    } else {
+      // Create new customer
+      const { data: newCustomer, error: createError } = await sb
+        .from('Customer')
+        .insert({
+          name: b.customer.name,
+          phone: b.customer.phone,
+          email: b.customer.email,
+          org_name: b.customer.org_name || null,
+          reg_code: b.customer.reg_code || null,
+          segment: "RETAIL"
+        })
+        .select('id')
+        .single();
 
-    // 5) create order + lines
-    const order = await prisma.order.create({
-      data:{
-        channel: b.channel === "veeb" ? "WEB" : b.channel === "telefon" ? "PHONE" : b.channel === "FB" ? "FACEBOOK" : "EMAIL",
-        customer_id: customer.id,
+      if (createError || !newCustomer) {
+        console.error('[api/orders] Failed to create customer:', createError);
+        return NextResponse.json({ok:false, error:"Failed to create customer"},{status:500});
+      }
+      customerId = newCustomer.id;
+    }
+
+    // 5) Create order
+    const channelMap: Record<string, string> = {
+      "veeb": "WEB",
+      "telefon": "PHONE",
+      "FB": "FACEBOOK",
+      "e_post": "EMAIL"
+    };
+
+    const { data: order, error: orderError } = await sb
+      .from('Order')
+      .insert({
+        channel: channelMap[b.channel] || "WEB",
+        customer_id: customerId,
         ring_id: b.ring_id,
         stop_id: b.stop_id,
         delivery_type: isHomeDelivery ? "HOME" : "STOP",
@@ -108,107 +138,72 @@ export async function POST(req: Request) {
         status: "NEW",
         notes_customer: b.notes_customer || null,
         notes_internal: b.notes_internal || null,
-        payment_method: b.payment_method==="ülekandega" ? "TRANSFER" : "CASH",
-        lines: {
-          create: b.order_lines.map(l=>({
-            product: {
-              connect: { sku: l.sku }
-            },
-            uom: l.uom.toUpperCase() as 'KG' | 'TK',
-            requested_qty: l.ordered_qty,
-            substitution_allowed: !!l.substitution_allowed,
-            unit_price: l.unit_price || null
-          }))
-        }
-      },
-      include: { lines: true }
-    });
+        payment_method: b.payment_method === "ülekandega" ? "TRANSFER" : "CASH"
+      })
+      .select('id')
+      .single();
 
-    // 6) Send confirmation email
-    try {
-      const stop = await prisma.stop.findUnique({ where: { id: b.stop_id } });
-      const productDetails = await Promise.all(
-        b.order_lines.map(async (line) => {
-          const product = await prisma.product.findUnique({ where: { sku: line.sku } });
-          return {
-            name: product?.name || line.sku,
-            sku: line.sku,
-            quantity: line.ordered_qty,
-            uom: line.uom.toUpperCase()
-          };
-        })
-      );
-
-      await sendOrderConfirmationEmail(
-        customer.email,
-        customer.name,
-        order.id,
-        {
-          ring: ring.region,
-          stop: stop?.name || 'Unknown',
-          deliveryType: isHomeDelivery ? 'HOME' : 'STOP',
-          deliveryAddress: isHomeDelivery ? b.notes_customer : undefined,
-          paymentMethod: b.payment_method === "ülekandega" ? "TRANSFER" : "CASH",
-          products: productDetails
-        }
-      );
-    } catch (emailError) {
-      console.error('Failed to send confirmation email:', emailError);
-      // Don't fail the order if email fails
+    if (orderError || !order) {
+      console.error('[api/orders] Failed to create order:', orderError);
+      return NextResponse.json({ok:false, error:"Failed to create order"},{status:500});
     }
 
-    return NextResponse.json({ ok:true, orderId: order.id, duplicate }, { status: 200 });
+    // 6) Create order lines
+    const orderLines = b.order_lines.map(line => ({
+      order_id: order.id,
+      product_sku: line.sku,
+      uom: line.uom.toUpperCase() as 'KG' | 'TK',
+      requested_qty: line.ordered_qty,
+      substitution_allowed: !!line.substitution_allowed,
+      unit_price: line.unit_price || null
+    }));
+
+    const { error: linesError } = await sb
+      .from('OrderLine')
+      .insert(orderLines);
+
+    if (linesError) {
+      console.error('[api/orders] Failed to create order lines:', linesError);
+      return NextResponse.json({ok:false, error:"Failed to create order lines"},{status:500});
+    }
+
+    // TODO: Send confirmation email when email service is set up
+    // try {
+    //   const stop = await sb.from('Stop').select('name').eq('id', b.stop_id).single();
+    //   await sendOrderConfirmationEmail(customer.email, ...);
+    // } catch (emailError) {
+    //   console.error('Failed to send confirmation email:', emailError);
+    // }
+
+    return NextResponse.json({ 
+      ok: true, 
+      orderId: order.id,
+      duplicate: !!duplicateOrder 
+    }, { status: 200 });
+
   } catch (e: unknown) {
-    console.error(e);
+    console.error('[api/orders] exception:', e);
     return NextResponse.json({ ok:false, error:"Server error" }, { status: 500 });
   }
 }
 
 export async function GET() {
   try {
-    // Return mock data for now
-    const mockRings = [
-      {
-        id: 'ring-1',
-        ring_date: '2025-11-07T00:00:00.000Z',
-        region: 'Vändra–Enge ring',
-        driver: null,
-        visible_from: '2025-11-07T00:00:00.000Z',
-        visible_to: null,
-        cutoff_at: '2025-11-06T18:00:00.000Z',
-        capacity_orders: null,
-        capacity_kg: null,
-        status: 'OPEN'
-      },
-      {
-        id: 'ring-2',
-        ring_date: '2025-11-12T00:00:00.000Z',
-        region: 'Järva-Jaani–Kõmsi ring',
-        driver: null,
-        visible_from: '2025-11-12T00:00:00.000Z',
-        visible_to: null,
-        cutoff_at: '2025-11-11T18:00:00.000Z',
-        capacity_orders: null,
-        capacity_kg: null,
-        status: 'OPEN'
-      },
-      {
-        id: 'ring-3',
-        ring_date: '2025-11-19T00:00:00.000Z',
-        region: 'Kose–Haapsalu ring',
-        driver: null,
-        visible_from: '2025-11-19T00:00:00.000Z',
-        visible_to: null,
-        cutoff_at: '2025-11-18T18:00:00.000Z',
-        capacity_orders: null,
-        capacity_kg: null,
-        status: 'OPEN'
-      }
-    ];
+    const sb = getSupabase();
     
-    return NextResponse.json({ ok: true, items: mockRings });
+    const { data: rings, error } = await sb
+      .from('Ring')
+      .select('id, ringDate, region, cutoffAt, status')
+      .order('ringDate', { ascending: true });
+
+    if (error) {
+      console.error('[api/orders GET] error:', error);
+      return NextResponse.json({ ok: false, error: "Database connection failed" }, { status: 500 });
+    }
+    
+    return NextResponse.json({ ok: true, items: rings || [] });
   } catch (e: unknown) {
-    console.error('GET /api/orders error:', e);
+    console.error('[api/orders GET] exception:', e);
     return NextResponse.json({ ok: false, error: "Database connection failed" }, { status: 500 });
   }
 }
