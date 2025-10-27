@@ -81,8 +81,12 @@ export default function OrderPage(){
   useEffect(()=>{ 
     // Fetch rings from API
     fetch("/api/rings").then(r=>r.json()).then(j=>{
-      if(Array.isArray(j)) setRings(j);
-    }).catch(console.error);
+      console.log('[order page] rings response:', j);
+      if(Array.isArray(j)) {
+        console.log('[order page] setting rings:', j.length);
+        setRings(j);
+      }
+    }).catch(e => console.error('[order page] rings fetch error:', e));
     // Robust products fetching with static fallback
     let cancelled = false;
     async function loadProducts() {
@@ -178,9 +182,14 @@ export default function OrderPage(){
   useEffect(()=>{
     if(form.ring_id) {
       // Fetch stops from API
+      console.log('[order page] fetching stops for ringId:', form.ring_id);
       fetch(`/api/stops?ringId=${encodeURIComponent(form.ring_id)}`).then(r=>r.json()).then(j=>{
-        if(Array.isArray(j)) setStops(j);
-      }).catch(console.error);
+        console.log('[order page] stops response:', j);
+        if(Array.isArray(j)) {
+          console.log('[order page] setting stops:', j.length);
+          setStops(j);
+        }
+      }).catch(e => console.error('[order page] stops fetch error:', e));
     } else {
       setStops([]);
     }
