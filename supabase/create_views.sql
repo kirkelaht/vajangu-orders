@@ -15,8 +15,7 @@ SELECT
   s.id as stop_id,
   s.name as stop_name,
   s.place,
-  s."order_index" as stop_order,
-  s."meetingPoint"
+  s."order_index" as stop_order
 FROM "Ring" r
 LEFT JOIN "Stop" s ON r.id = s."ringId"
 ORDER BY r."ringDate", s."order_index";
