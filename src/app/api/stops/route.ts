@@ -13,6 +13,12 @@ function sb() {
 
 export async function GET(req: Request) {
   console.log('[api/stops] handler start');
+  
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('[api/stops] Missing Supabase environment variables');
+    return NextResponse.json({ error: 'Missing Supabase configuration' }, { status: 500 });
+  }
+  
   const client = sb();
   const { searchParams } = new URL(req.url);
   const ringId = searchParams.get('ringId');
