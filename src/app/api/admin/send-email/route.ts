@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { sendCustomEmail } from "@/lib/email";
+import { createClient } from '@supabase/supabase-js';
+// import { sendCustomEmail } from "@/lib/email";
+
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error('Missing Supabase environment variables');
+  }
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
 export async function POST(req: Request) {
   try {
@@ -11,40 +20,46 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Order ID, subject, and message are required" }, { status: 400 });
     }
 
-    // Fetch the order with customer details
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
-      include: {
-        customer: true,
-        ring: true,
-        stop: true
-      }
-    });
+    const sb = getSupabase();
 
-    if (!order) {
+    // Fetch the order with customer details
+    const { data: order, error: orderError } = await sb
+      .from('Order')
+      .select(`
+        *,
+        Customer:customer_id (*),
+        Ring:ring_id (*),
+        Stop:stop_id (*)
+      `)
+      .eq('id', orderId)
+      .single();
+
+    if (orderError || !order) {
       return NextResponse.json({ ok: false, error: "Order not found" }, { status: 404 });
     }
 
-    // Send custom email
-    try {
-      await sendCustomEmail(
-        order.customer.email,
-        order.customer.name,
-        subject,
-        message,
-        {
-          orderId: order.id,
-          customerName: order.customer.name,
-          ring: order.ring.region,
-          stop: order.stop.name
-        }
-      );
-    } catch (emailError) {
-      console.error('Failed to send custom email:', emailError);
-      return NextResponse.json({ ok: false, error: "Failed to send email" }, { status: 500 });
-    }
+    // TODO: Send custom email when email service is set up
+    // try {
+    //   await sendCustomEmail(
+    //     order.Customer.email,
+    //     order.Customer.name,
+    //     subject,
+    //     message,
+    //     {
+    //       orderId: order.id,
+    //       customerName: order.Customer.name,
+    //       ring: order.Ring.region,
+    //       stop: order.Stop.name
+    //     }
+    //   );
+    // } catch (emailError) {
+    //   console.error('Failed to send custom email:', emailError);
+    //   return NextResponse.json({ ok: false, error: "Failed to send email" }, { status: 500 });
+    // }
 
-    return NextResponse.json({ ok: true });
+    console.log('[admin/send-email] Email would be sent to:', order.Customer?.email);
+
+    return NextResponse.json({ ok: true, message: 'Email functionality not yet implemented' });
 
   } catch (error) {
     console.error('Failed to send custom email:', error);

@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { sendInvoiceEmail } from "@/lib/email";
+import { createClient } from '@supabase/supabase-js';
+// import { sendInvoiceEmail } from "@/lib/email";
+
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error('Missing Supabase environment variables');
+  }
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
 export async function POST(req: Request) {
   try {
@@ -11,22 +20,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Order ID is required" }, { status: 400 });
     }
 
-    // Fetch the order with all related data
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
-      include: {
-        customer: true,
-        ring: true,
-        stop: true,
-        lines: {
-          include: {
-            product: true
-          }
-        }
-      }
-    });
+    const sb = getSupabase();
 
-    if (!order) {
+    // Fetch the order with all related data
+    const { data: order, error: orderError } = await sb
+      .from('Order')
+      .select(`
+        *,
+        Customer:customer_id (*),
+        Ring:ring_id (*),
+        Stop:stop_id (*)
+      `)
+      .eq('id', orderId)
+      .single();
+
+    if (orderError || !order) {
       return NextResponse.json({ ok: false, error: "Order not found" }, { status: 404 });
     }
 
@@ -35,39 +43,50 @@ export async function POST(req: Request) {
     const yearPrefix = currentYear.toString();
     
     // Find the highest invoice number for this year
-    const lastInvoice = await prisma.order.findFirst({
-      where: {
-        invoiceNumber: {
-          startsWith: yearPrefix
-        }
-      },
-      orderBy: {
-        invoiceNumber: 'desc'
-      }
-    });
+    const { data: lastInvoice } = await sb
+      .from('Order')
+      .select('invoice_number')
+      .like('invoice_number', `${yearPrefix}-%`)
+      .order('invoice_number', { ascending: false })
+      .limit(1)
+      .single();
 
     let nextNumber = 1;
-    if (lastInvoice?.invoiceNumber) {
-      const lastNumber = parseInt(lastInvoice.invoiceNumber.split('-')[1]);
+    if (lastInvoice?.invoice_number) {
+      const lastNumber = parseInt(lastInvoice.invoice_number.split('-')[1]);
       nextNumber = lastNumber + 1;
     }
 
     const invoiceNumber = `${yearPrefix}-${nextNumber.toString().padStart(4, '0')}`;
 
     // Update order with invoice number and status
-    await prisma.order.update({
-      where: { id: orderId },
-      data: {
-        invoiceNumber: invoiceNumber,
+    const { error: updateError } = await sb
+      .from('Order')
+      .update({
+        invoice_number: invoiceNumber,
         status: 'INVOICED',
-        invoicedAt: new Date()
-      }
-    });
+        invoiced_at: new Date().toISOString()
+      })
+      .eq('id', orderId);
+
+    if (updateError) {
+      console.error('[admin/invoice] Failed to update order:', updateError);
+      return NextResponse.json({ ok: false, error: "Failed to update order" }, { status: 500 });
+    }
+
+    // Fetch order lines with products
+    const { data: lines } = await sb
+      .from('OrderLine')
+      .select(`
+        *,
+        Product:product_sku (*)
+      `)
+      .eq('order_id', orderId);
 
     // Calculate totals
-    const subtotal = order.lines.reduce((total, line) => {
-      const unitPrice = line.unitPrice ? Number(line.unitPrice) : 0;
-      const quantity = Number(line.packedWeight || line.requestedQty);
+    const subtotal = (lines || []).reduce((total: number, line: any) => {
+      const unitPrice = line.unit_price ? Number(line.unit_price) : 0;
+      const quantity = Number(line.packed_weight || line.packed_qty || line.requested_qty);
       return total + (unitPrice * quantity);
     }, 0);
 
@@ -75,39 +94,17 @@ export async function POST(req: Request) {
     const vatAmount = subtotal * vatRate;
     const total = subtotal + vatAmount;
 
-    // Send invoice email
-    try {
-      await sendInvoiceEmail(
-        order.customer.email,
-        order.customer.name,
-        invoiceNumber,
-        {
-          orderId: order.id,
-          orderDate: order.createdAt,
-          invoiceDate: new Date(),
-          customer: order.customer,
-          ring: order.ring.region,
-          stop: order.stop.name,
-          deliveryType: order.deliveryType,
-          deliveryAddress: order.deliveryAddress || undefined,
-          paymentMethod: order.paymentMethod,
-          products: order.lines.map(line => ({
-            name: line.product.name,
-            sku: line.product.sku,
-            quantity: Number(line.packedWeight || line.requestedQty),
-            uom: line.uom.toLowerCase(),
-            unitPrice: line.unitPrice ? Number(line.unitPrice) : 0,
-            lineTotal: (line.unitPrice ? Number(line.unitPrice) : 0) * Number(line.packedWeight || line.requestedQty)
-          })),
-          subtotal,
-          vatAmount,
-          total
-        }
-      );
-    } catch (emailError) {
-      console.error('Failed to send invoice email:', emailError);
-      // Don't fail the invoice generation if email fails
-    }
+    // TODO: Send invoice email when email service is set up
+    // try {
+    //   await sendInvoiceEmail(
+    //     order.Customer.email,
+    //     order.Customer.name,
+    //     invoiceNumber,
+    //     { ... }
+    //   );
+    // } catch (emailError) {
+    //   console.error('Failed to send invoice email:', emailError);
+    // }
 
     return NextResponse.json({ 
       ok: true, 

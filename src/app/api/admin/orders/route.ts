@@ -1,25 +1,54 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { createClient } from '@supabase/supabase-js';
+
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error('Missing Supabase environment variables');
+  }
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
 export async function GET() {
   try {
-    const orders = await prisma.order.findMany({
-      include: {
-        customer: true,
-        ring: true,
-        stop: true,
-        lines: {
-          include: {
-            product: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
+    const sb = getSupabase();
+    
+    // Fetch all orders with related data
+    const { data: orders, error } = await sb
+      .from('Order')
+      .select(`
+        *,
+        Customer:customer_id (*),
+        Ring:ring_id (*),
+        Stop:stop_id (*)
+      `)
+      .order('created_at', { ascending: false });
 
-    return NextResponse.json({ ok: true, orders });
+    if (error) {
+      console.error('[admin/orders] Failed to fetch orders:', error);
+      return NextResponse.json({ ok: false, error: "Failed to fetch orders" }, { status: 500 });
+    }
+
+    // Fetch order lines for each order
+    const ordersWithLines = await Promise.all(
+      (orders || []).map(async (order: any) => {
+        const { data: lines } = await sb
+          .from('OrderLine')
+          .select(`
+            *,
+            Product:product_sku (*)
+          `)
+          .eq('order_id', order.id);
+        
+        return {
+          ...order,
+          lines: lines || []
+        };
+      })
+    );
+
+    return NextResponse.json({ ok: true, orders: ordersWithLines });
   } catch (error) {
     console.error('Failed to fetch orders:', error);
     return NextResponse.json({ ok: false, error: "Failed to fetch orders" }, { status: 500 });
@@ -35,34 +64,50 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Missing required fields" }, { status: 400 });
     }
 
+    const sb = getSupabase();
+
     const customSku = `CUSTOM_${Date.now()}`;
 
     // Create a custom product entry first
-    await prisma.product.upsert({
-      where: { sku: customSku },
-      update: {},
-      create: {
+    const { error: productError } = await sb
+      .from('Product')
+      .upsert({
         sku: customSku,
         name: productName,
         category: 'Kohandatud tooted',
-        uom: uom.toUpperCase() as 'KG' | 'TK',
+        group_name: 'Kohandatud tooted',
+        uom: uom.toUpperCase(),
         active: true,
-        catchWeight: uom.toLowerCase() === 'kg'
-      }
-    });
+        catch_weight: uom.toLowerCase() === 'kg'
+      }, {
+        onConflict: 'sku'
+      });
+
+    if (productError) {
+      console.error('[admin/orders] Failed to create product:', productError);
+      return NextResponse.json({ ok: false, error: "Failed to create product" }, { status: 500 });
+    }
 
     // Create a new order line with custom product
-    const orderLine = await prisma.orderLine.create({
-      data: {
-        orderId: orderId,
-        productSku: customSku,
-        uom: uom.toUpperCase() as 'KG' | 'TK',
-        requestedQty: parseFloat(weight),
-        packedWeight: parseFloat(weight),
-        unitPrice: parseFloat(unitPrice),
-        substitutionAllowed: false
-      }
-    });
+    const { data: orderLine, error: lineError } = await sb
+      .from('OrderLine')
+      .insert({
+        order_id: orderId,
+        product_sku: customSku,
+        uom: uom.toUpperCase(),
+        requested_qty: parseFloat(weight),
+        packed_weight: parseFloat(weight),
+        packed_qty: parseFloat(weight),
+        unit_price: parseFloat(unitPrice),
+        substitution_allowed: false
+      })
+      .select()
+      .single();
+
+    if (lineError) {
+      console.error('[admin/orders] Failed to add product to order:', lineError);
+      return NextResponse.json({ ok: false, error: "Failed to add product to order" }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true, orderLine });
   } catch (error) {
@@ -76,20 +121,32 @@ export async function PATCH(req: Request) {
     const body = await req.json();
     const { orderId, status, lineId, packedWeight } = body;
 
+    const sb = getSupabase();
+
     if (status) {
       // Update order status
-      await prisma.order.update({
-        where: { id: orderId },
-        data: { status }
-      });
+      const { error } = await sb
+        .from('Order')
+        .update({ status })
+        .eq('id', orderId);
+
+      if (error) {
+        console.error('[admin/orders] Failed to update order status:', error);
+        return NextResponse.json({ ok: false, error: "Failed to update order" }, { status: 500 });
+      }
     }
 
     if (lineId && packedWeight !== undefined) {
       // Update packed weight for a specific order line
-      await prisma.orderLine.update({
-        where: { id: lineId },
-        data: { packedWeight }
-      });
+      const { error } = await sb
+        .from('OrderLine')
+        .update({ packed_weight: packedWeight, packed_qty: packedWeight })
+        .eq('id', lineId);
+
+      if (error) {
+        console.error('[admin/orders] Failed to update order line:', error);
+        return NextResponse.json({ ok: false, error: "Failed to update order line" }, { status: 500 });
+      }
     }
 
     return NextResponse.json({ ok: true });
