@@ -195,14 +195,32 @@ export default function OrderPage(){
   const isHomeDelivery = selectedRing?.region === 'Viru-Nigula-Sonda ring';
 
   function addProduct(sku:string, name:string, uom:string, quantity:number = 1, price:number = 0){
-    const existing = form.order_lines.find((l: FormOrderLine)=>l.sku===sku);
-    if(existing){
-      setForm({...form, order_lines: form.order_lines.map((l: FormOrderLine)=>l.sku===sku ? {...l, ordered_qty: l.ordered_qty + quantity} : l)});
-    } else {
-      setForm({...form, order_lines: [...form.order_lines, {sku, name, uom, ordered_qty: quantity, substitution_allowed: false, unit_price: price}]});
+    try {
+      // Validate inputs
+      if (!sku || !name) {
+        console.error('addProduct: missing required fields', { sku, name });
+        return;
+      }
+      const qty = Number(quantity);
+      if (!Number.isFinite(qty) || qty <= 0) {
+        console.error('addProduct: invalid quantity', quantity);
+        return;
+      }
+
+      const existing = form.order_lines.find((l: FormOrderLine)=>l.sku===sku);
+      if(existing){
+        setForm({...form, order_lines: form.order_lines.map((l: FormOrderLine)=>l.sku===sku ? {...l, ordered_qty: l.ordered_qty + quantity} : l)});
+      } else {
+        setForm({...form, order_lines: [...form.order_lines, {sku, name, uom, ordered_qty: qty, substitution_allowed: false, unit_price: price}]});
+      }
+      
+      // Reset quantity after adding by deleting the key
+      const updated = {...productQuantities};
+      delete updated[sku];
+      setProductQuantities(updated);
+    } catch (error) {
+      console.error('addProduct error:', error);
     }
-    // Reset quantity after adding (set to empty string)
-    setProductQuantities({...productQuantities, [sku]: 0});
   }
 
   function removeProduct(sku:string){
