@@ -2,6 +2,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Ring, Stop, Product } from "@/types";
+import RoutePicker from "@/components/RoutePicker";
 
 // API Product type
 type ApiProduct = {
@@ -30,8 +31,6 @@ interface FormOrderLine {
 }
 
 export default function OrderPage(){
-  const [rings,setRings]=useState<Ring[]>([]);
-  const [stops,setStops]=useState<Stop[]>([]);
   const [products,setProducts]=useState<Product[]>([]);
   const [productGroups,setProductGroups]=useState<ApiProductGroup[]>([]);
   const [categories,setCategories]=useState<string[]>([]);
@@ -79,14 +78,6 @@ export default function OrderPage(){
   }
 
   useEffect(()=>{ 
-    // Fetch rings from API
-    fetch("/api/rings").then(r=>r.json()).then(j=>{
-      console.log('[order page] rings response:', j);
-      if(Array.isArray(j)) {
-        console.log('[order page] setting rings:', j.length);
-        setRings(j);
-      }
-    }).catch(e => console.error('[order page] rings fetch error:', e));
     // Robust products fetching with static fallback
     let cancelled = false;
     async function loadProducts() {
@@ -179,30 +170,14 @@ export default function OrderPage(){
     return () => { cancelled = true; };
   },[]);
   
-  useEffect(()=>{
-    if(form.ring_id) {
-      // Fetch stops from API
-      console.log('[order page] fetching stops for ringId:', form.ring_id);
-      fetch(`/api/stops?ringId=${encodeURIComponent(form.ring_id)}`).then(r=>r.json()).then(j=>{
-        console.log('[order page] stops response:', j);
-        if(Array.isArray(j)) {
-          console.log('[order page] setting stops:', j.length);
-          setStops(j);
-        }
-      }).catch(e => console.error('[order page] stops fetch error:', e));
-    } else {
-      setStops([]);
-    }
-  },[form.ring_id]);
 
   // Get products for selected category from grouped data
   const categoryProducts = productGroups.length > 0 
     ? productGroups.find(g => g.group === selectedCategory)?.products ?? []
     : products.filter(p => p.category === selectedCategory);
   
-  // Check if selected ring is for home delivery
-  const selectedRing = rings.find((r: Ring) => r.id === form.ring_id);
-  const isHomeDelivery = selectedRing?.region === 'Viru-Nigula-Sonda ring';
+  // Check if selected ring is for home delivery (temporarily disabled, RoutePicker will handle this)
+  const isHomeDelivery = false;
 
   function addProduct(sku:string, name:string, uom:string, quantity:number = 1, price:number = 0){
     try {
@@ -352,31 +327,7 @@ export default function OrderPage(){
               {/* Ring and Stop Selection */}
               <div className="bg-gray-50 p-6 rounded-lg">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Tarneinfo</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Vali ring *</label>
-                    <select className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent" value={form.ring_id}
-                      onChange={e=>setForm({...form, ring_id:e.target.value, stop_id:""})}>
-                      <option value="">Vali ring</option>
-                      {rings.map((r: any)=><option key={r.id} value={r.id}>
-         {r.label || r.region}
-       </option>)}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {isHomeDelivery ? "Vali piirkond *" : "Vali peatus *"}
-                    </label>
-                    <select className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent" value={form.stop_id}
-                      onChange={e=>setForm({...form, stop_id:e.target.value})}>
-                      <option value="">{isHomeDelivery ? "Vali piirkond" : "Vali peatus"}</option>
-                      {stops.map((s: any)=><option key={s.id} value={s.id}>
-                        {s.label || s.name || ''}
-                      </option>)}
-                    </select>
-                  </div>
-                </div>
+                <RoutePicker />
                 
                 {/* Address field for home delivery */}
                 {isHomeDelivery && (
