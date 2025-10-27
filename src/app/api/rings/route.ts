@@ -21,30 +21,29 @@ export async function GET() {
   
   const client = sb();
 
-  const tries = [
-    { table: 'rings', cols: 'id, region, ring_date, visible_from, visible_to, cutoff_at', order: 'ring_date' },
-    { table: 'Ring',  cols: 'id, region, "ringDate", "visibleFrom", "visibleTo", "cutoffAt"', order: 'ringDate' },
-  ];
+  // Query Supabase Ring table with camelCase columns
+  const { data, error } = await client
+    .from('Ring')
+    .select('id, region, ringDate, visibleFrom, visibleTo, cutoffAt')
+    .order('ringDate', { ascending: true });
 
-  for (const t of tries) {
-    const { data, error } = await client.from<any>(t.table).select(t.cols).order(t.order as any, { ascending: true });
-    if (error) {
-      console.error('[api/rings]', t.table, 'error:', error.message);
-      continue;
-    }
-    if (!Array.isArray(data)) {
-      console.error('[api/rings]', t.table, 'non-array payload');
-      continue;
-    }
-    const items = data.map((row:any) => {
-      const iso = row.ring_date ?? row.ringDate ?? null;
-      const d = iso ? new Date(iso) : null;
-      const region = row.region ?? '';
-      const label = d ? `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')} ${region}` : region;
-      return { id: row.id, region, dateISO: d ? d.toISOString() : null, label };
-    });
-    return NextResponse.json(items);
+  if (error) {
+    console.error('[api/rings] error:', error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ error: 'rings failed on all table variants' }, { status: 500 });
+  if (!Array.isArray(data)) {
+    console.error('[api/rings] non-array payload');
+    return NextResponse.json({ error: 'Invalid data format' }, { status: 500 });
+  }
+
+  const items = data.map((row: any) => {
+    const iso = row.ringDate ?? null;
+    const d = iso ? new Date(iso) : null;
+    const region = row.region ?? '';
+    const label = d ? `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')} ${region}` : region;
+    return { id: row.id, region, dateISO: d ? d.toISOString() : null, label };
+  });
+
+  return NextResponse.json(items);
 }

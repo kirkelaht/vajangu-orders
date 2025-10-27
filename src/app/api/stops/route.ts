@@ -24,33 +24,30 @@ export async function GET(req: Request) {
   const ringId = searchParams.get('ringId');
   if (!ringId) return NextResponse.json([]);
 
-  const tries = [
-    { table: 'stops', colRing: 'ring_id', cols: 'id, ring_id, name, place, order_index', order: 'order_index' },
-    { table: 'Stop',  colRing: 'ringId',  cols: 'id, "ringId", name, place, order_index', order: 'order_index' },
-  ];
+  // Query Supabase Stop table
+  const { data, error } = await client
+    .from('Stop')
+    .select('id, ringId, name, place, order_index')
+    .eq('ringId', ringId)
+    .order('order_index', { ascending: true });
 
-  for (const t of tries) {
-    const { data, error } = await client.from<any>(t.table)
-      .select(t.cols)
-      .eq(t.colRing as any, ringId)
-      .order(t.order as any, { ascending: true });
-    if (error) {
-      console.error('[api/stops]', t.table, 'error:', error.message);
-      continue;
-    }
-    if (!Array.isArray(data)) {
-      console.error('[api/stops]', t.table, 'non-array payload');
-      continue;
-    }
-    const items = data.map((row:any) => ({
-      id: row.id,
-      name: row.name,
-      place: row.place,
-      order_index: row.order_index ?? 0,
-      label: `${row.name} — ${row.place ?? ''}`.trim(),
-    }));
-    return NextResponse.json(items);
+  if (error) {
+    console.error('[api/stops] error:', error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ error: 'stops failed on all table variants' }, { status: 500 });
+  if (!Array.isArray(data)) {
+    console.error('[api/stops] non-array payload');
+    return NextResponse.json({ error: 'Invalid data format' }, { status: 500 });
+  }
+
+  const items = data.map((row: any) => ({
+    id: row.id,
+    name: row.name,
+    place: row.place,
+    order_index: row.order_index ?? 0,
+    label: `${row.name} — ${row.place ?? ''}`.trim(),
+  }));
+
+  return NextResponse.json(items);
 }
