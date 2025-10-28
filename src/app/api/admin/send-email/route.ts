@@ -13,10 +13,15 @@ function getSupabase() {
 
 export async function POST(req: Request) {
   try {
+    console.log('[admin/send-email] POST request received');
+    
     const body = await req.json();
     const { orderId, subject, message } = body;
+    
+    console.log('[admin/send-email] Request body:', { orderId, subject, message: message?.substring(0, 50) });
 
     if (!orderId || !subject || !message) {
+      console.log('[admin/send-email] Missing required fields');
       return NextResponse.json({ ok: false, error: "Order ID, subject, and message are required" }, { status: 400 });
     }
 
@@ -29,32 +34,43 @@ export async function POST(req: Request) {
       .eq('id', orderId)
       .single();
 
+    console.log('[admin/send-email] Order fetch result:', { hasOrder: !!order, error: orderError });
+
     if (orderError || !order) {
+      console.error('[admin/send-email] Order not found:', orderError);
       return NextResponse.json({ ok: false, error: "Order not found" }, { status: 404 });
     }
 
     // Fetch customer details
-    const { data: customer } = await sb
+    const { data: customer, error: customerError } = await sb
       .from('Customer')
       .select('*')
       .eq('id', order.customerId)
       .single();
 
     // Fetch ring details
-    const { data: ring } = await sb
+    const { data: ring, error: ringError } = await sb
       .from('Ring')
       .select('*')
       .eq('id', order.ringId)
       .single();
 
     // Fetch stop details
-    const { data: stop } = await sb
+    const { data: stop, error: stopError } = await sb
       .from('Stop')
       .select('*')
       .eq('id', order.stopId)
       .single();
 
+    console.log('[admin/send-email] Related data fetch:', { 
+      hasCustomer: !!customer, 
+      hasRing: !!ring, 
+      hasStop: !!stop,
+      errors: { customer: customerError, ring: ringError, stop: stopError }
+    });
+
     if (!customer || !ring || !stop) {
+      console.error('[admin/send-email] Order details incomplete:', { customerError, ringError, stopError });
       return NextResponse.json({ ok: false, error: "Order details incomplete" }, { status: 404 });
     }
 
