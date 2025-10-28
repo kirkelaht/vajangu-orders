@@ -128,16 +128,18 @@ export default function OrderPage(){
             setProductGroups(grouped as ApiProductGroup[]);
             const cats = grouped.map((g: any) => g.group);
             
-            // Custom sorting: "Värske sealiha" first, "Kinkekaart" last
-            const sortedCats = cats.sort((a, b) => {
-              if (a === "Värske sealiha") return -1;
-              if (b === "Värske sealiha") return 1;
-              if (a === "Kinkekaart") return 1;
-              if (b === "Kinkekaart") return -1;
-              return a.localeCompare(b); // alphabetical for others
-            });
+            // Filter out "Kohandatud tooted" and sort: "Värske sealiha" first, "Kinkekaart" last
+            const filteredAndSorted = cats
+              .filter(cat => cat !== "Kohandatud tooted")
+              .sort((a, b) => {
+                if (a === "Värske sealiha") return -1;
+                if (b === "Värske sealiha") return 1;
+                if (a === "Kinkekaart") return 1;
+                if (b === "Kinkekaart") return -1;
+                return a.localeCompare(b); // alphabetical for others
+              });
             
-            setCategories(sortedCats);
+            setCategories(filteredAndSorted);
           }
           apiSucceeded = true;
           return;
@@ -175,16 +177,18 @@ export default function OrderPage(){
               setProductGroups(transformed as ApiProductGroup[]);
               const cats = transformed.map((g: ApiProductGroup) => g.group);
               
-              // Custom sorting: "Värske sealiha" first, "Kinkekaart" last
-              const sortedCats = cats.sort((a, b) => {
-                if (a === "Värske sealiha") return -1;
-                if (b === "Värske sealiha") return 1;
-                if (a === "Kinkekaart") return 1;
-                if (b === "Kinkekaart") return -1;
-                return a.localeCompare(b); // alphabetical for others
-              });
+              // Filter out "Kohandatud tooted" and sort: "Värske sealiha" first, "Kinkekaart" last
+              const filteredAndSorted = cats
+                .filter(cat => cat !== "Kohandatud tooted")
+                .sort((a, b) => {
+                  if (a === "Värske sealiha") return -1;
+                  if (b === "Värske sealiha") return 1;
+                  if (a === "Kinkekaart") return 1;
+                  if (b === "Kinkekaart") return -1;
+                  return a.localeCompare(b); // alphabetical for others
+                });
               
-              setCategories(sortedCats);
+              setCategories(filteredAndSorted);
             }
           } else {
             if (!cancelled) setLastError('Fallback file missing groups[]');
