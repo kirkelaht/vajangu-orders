@@ -50,29 +50,44 @@ export async function POST(req: Request) {
     const sb = getSupabase();
 
     // 2) Check ring exists and cutoff
+    console.log('[api/orders POST] Checking ring:', b.ring_id);
     const { data: ring, error: ringError } = await sb
       .from('Ring')
       .select('id, region, cutoffAt, ringDate')
       .eq('id', b.ring_id)
       .single();
     
-    if (ringError || !ring) {
+    if (ringError) {
+      console.error('[api/orders POST] Ring query error:', ringError);
+      return NextResponse.json({ok:false, error:`Ring not found: ${ringError.message}`},{status:404});
+    }
+    
+    if (!ring) {
+      console.error('[api/orders POST] Ring not found with id:', b.ring_id);
       return NextResponse.json({ok:false, error:"Ring not found"},{status:404});
     }
+    
+    console.log('[api/orders POST] Ring found:', ring.region);
 
     const now = new Date();
     if (ring.cutoffAt && now > new Date(ring.cutoffAt)) {
+      console.log('[api/orders POST] Cutoff passed for ring');
       return NextResponse.json({ok:false, error:"Cutoff passed for this ring"},{status:422});
     }
 
     const isHomeDelivery = ring.region === 'Viru-Nigula-Sonda ring';
 
     // 3) Upsert customer first
+    console.log('[api/orders POST] Upserting customer:', b.customer.email);
     const { data: existingCustomer } = await sb
       .from('Customer')
       .select('id, name, phone, email, orgName, regCode, segment')
       .eq('email', b.customer.email)
       .single();
+    
+    if (existingCustomer) {
+      console.log('[api/orders POST] Existing customer found:', existingCustomer.id);
+    }
 
     let customerId: string;
     if (existingCustomer) {
