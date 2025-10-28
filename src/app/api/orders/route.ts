@@ -23,8 +23,15 @@ type Body = {
 };
 
 export async function POST(req: Request) {
+  console.log('[api/orders POST] Starting order submission');
   try {
     const b = (await req.json()) as Body;
+    console.log('[api/orders POST] Request body received', { 
+      has_customer: !!b.customer, 
+      ring_id: b.ring_id, 
+      stop_id: b.stop_id, 
+      order_lines_count: b.order_lines?.length 
+    });
     
     // Check if Supabase is configured
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -185,7 +192,9 @@ export async function POST(req: Request) {
 
   } catch (e: unknown) {
     console.error('[api/orders] exception:', e);
-    return NextResponse.json({ ok:false, error:"Server error" }, { status: 500 });
+    const errorMsg = e instanceof Error ? e.message : String(e);
+    console.error('[api/orders] error details:', errorMsg);
+    return NextResponse.json({ ok:false, error: `Server error: ${errorMsg}` }, { status: 500 });
   }
 }
 
