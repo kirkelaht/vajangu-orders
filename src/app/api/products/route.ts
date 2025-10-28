@@ -55,9 +55,16 @@ export async function GET() {
     }
     console.log('[api/products] groups:', dbg);
 
-    // Sort groups and items
+    // Sort groups with custom order: "Värske sealiha" first, "Kinkekaart" last, filter out "Kohandatud tooted"
     const out = Object.entries(groups)
-      .sort(([a],[b]) => a.localeCompare(b, 'et'))
+      .filter(([group]) => group !== "Kohandatud tooted")
+      .sort(([a], [b]) => {
+        if (a === "Värske sealiha") return -1;
+        if (b === "Värske sealiha") return 1;
+        if (a === "Kinkekaart") return 1;
+        if (b === "Kinkekaart") return -1;
+        return a.localeCompare(b, 'et'); // alphabetical for others
+      })
       .map(([group, products]) => ({
         group,
         products: (products as any[]).sort((a,b) => String(a.name).localeCompare(String(b.name), 'et')),
