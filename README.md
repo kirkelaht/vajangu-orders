@@ -107,24 +107,6 @@ The system uses Prisma ORM with the following main models:
 
 ## 🔧 Configuration
 
-### Environment Variables
-
-```bash
-# Database
-DATABASE_URL="postgresql://user:password@host:port/database?sslmode=require"
-
-# App Configuration
-APP_BASE_URL="https://your-domain.com"
-NODE_ENV="production"
-
-# Email Service
-MAILERSEND_API_KEY="your_mailersend_api_key"
-
-# Security
-ADMIN_PASSWORD="your_secure_password"
-JWT_SECRET="your_jwt_secret"
-```
-
 ### Database Setup
 
 #### Development (SQLite)
@@ -176,21 +158,6 @@ node check-backups.js
 
 For detailed deployment instructions, see [PRODUCTION-DEPLOYMENT.md](PRODUCTION-DEPLOYMENT.md).
 
-## 🔐 Security
-
-### Admin Access
-- **Default Password:** `vajangu2025` (change in production)
-- **Session Management:** Secure session handling
-- **Logout:** Automatic session termination
-
-### Data Protection
-- **Encryption:** Database connections encrypted with SSL
-- **Backups:** Automated daily backups with encryption
-- **Input Validation:** Protection against XSS and injection attacks
-- **Environment Variables:** Sensitive data stored securely
-
-For complete security guidelines, see [SECURITY-CHECKLIST.md](SECURITY-CHECKLIST.md).
-
 ## 📈 Monitoring
 
 ### Health Checks
@@ -215,11 +182,6 @@ For complete security guidelines, see [SECURITY-CHECKLIST.md](SECURITY-CHECKLIST
 
 This project is proprietary software for Vajangu Perefarm OÜ.
 
-## 📞 Support
-
-For technical support or questions:
-- **Email:** info@perefarm.ee
-- **Phone:** +372 5555 1234
 
 ## 🔄 Updates
 
