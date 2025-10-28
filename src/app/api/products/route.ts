@@ -69,7 +69,14 @@ export async function GET() {
       })
       .map(([group, products]) => ({
         group,
-        products: (products as any[]).sort((a,b) => String(a.name).localeCompare(String(b.name), 'et')),
+        products: (products as any[]).sort((a,b) => {
+          // Custom sorting for Hakklihad: Seahakkliha first
+          if (group === "Hakklihad") {
+            if (a.name === "Seahakkliha") return -1;
+            if (b.name === "Seahakkliha") return 1;
+          }
+          return String(a.name).localeCompare(String(b.name), 'et');
+        }),
       }));
 
     return NextResponse.json(out);
