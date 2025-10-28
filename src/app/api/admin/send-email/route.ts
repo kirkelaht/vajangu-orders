@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from '@supabase/supabase-js';
-// import { sendCustomEmail } from "@/lib/email";
+import { sendCustomEmail } from "@/lib/email";
 
 function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -22,15 +22,10 @@ export async function POST(req: Request) {
 
     const sb = getSupabase();
 
-    // Fetch the order with customer details
+    // Fetch the order with customer details using camelCase column names
     const { data: order, error: orderError } = await sb
       .from('Order')
-      .select(`
-        *,
-        Customer:customer_id (*),
-        Ring:ring_id (*),
-        Stop:stop_id (*)
-      `)
+      .select('*')
       .eq('id', orderId)
       .single();
 
@@ -38,28 +33,57 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Order not found" }, { status: 404 });
     }
 
-    // TODO: Send custom email when email service is set up
-    // try {
-    //   await sendCustomEmail(
-    //     order.Customer.email,
-    //     order.Customer.name,
-    //     subject,
-    //     message,
-    //     {
-    //       orderId: order.id,
-    //       customerName: order.Customer.name,
-    //       ring: order.Ring.region,
-    //       stop: order.Stop.name
-    //     }
-    //   );
-    // } catch (emailError) {
-    //   console.error('Failed to send custom email:', emailError);
-    //   return NextResponse.json({ ok: false, error: "Failed to send email" }, { status: 500 });
-    // }
+    // Fetch customer details
+    const { data: customer } = await sb
+      .from('Customer')
+      .select('*')
+      .eq('id', order.customerId)
+      .single();
 
-    console.log('[admin/send-email] Email would be sent to:', order.Customer?.email);
+    // Fetch ring details
+    const { data: ring } = await sb
+      .from('Ring')
+      .select('*')
+      .eq('id', order.ringId)
+      .single();
 
-    return NextResponse.json({ ok: true, message: 'Email functionality not yet implemented' });
+    // Fetch stop details
+    const { data: stop } = await sb
+      .from('Stop')
+      .select('*')
+      .eq('id', order.stopId)
+      .single();
+
+    if (!customer || !ring || !stop) {
+      return NextResponse.json({ ok: false, error: "Order details incomplete" }, { status: 404 });
+    }
+
+    // Send custom email
+    try {
+      const emailResult = await sendCustomEmail(
+        customer.email,
+        customer.name,
+        subject,
+        message,
+        {
+          orderId: order.id,
+          customerName: customer.name,
+          ring: ring.region,
+          stop: stop.name
+        }
+      );
+
+      if (!emailResult.success) {
+        console.error('Failed to send custom email:', emailResult.error);
+        return NextResponse.json({ ok: false, error: emailResult.error || "Failed to send email" }, { status: 500 });
+      }
+
+      console.log('[admin/send-email] Email sent successfully to:', customer.email);
+      return NextResponse.json({ ok: true, messageId: emailResult.messageId });
+    } catch (emailError) {
+      console.error('Failed to send custom email:', emailError);
+      return NextResponse.json({ ok: false, error: "Failed to send email" }, { status: 500 });
+    }
 
   } catch (error) {
     console.error('Failed to send custom email:', error);

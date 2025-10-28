@@ -23,7 +23,7 @@ export async function sendOrderConfirmationEmail(
   }
 ) {
   try {
-    const sender = new Sender("noreply@perefarm.ee", "Vajangu Perefarm");
+    const sender = new Sender("vajanguperefarm@gmail.com", "Vajangu Perefarm");
     const recipients = [new Recipient(customerEmail, customerName)];
 
     const emailParams = new EmailParams()
@@ -152,7 +152,7 @@ export async function sendInvoiceEmail(
   }
 ) {
   try {
-    const sender = new Sender("noreply@perefarm.ee", "Vajangu Perefarm");
+    const sender = new Sender("vajanguperefarm@gmail.com", "Vajangu Perefarm");
     const recipients = [new Recipient(customerEmail, customerName)];
 
     const emailParams = new EmailParams()
@@ -305,7 +305,7 @@ export async function sendCustomEmail(
   }
 ) {
   try {
-    const sender = new Sender("noreply@perefarm.ee", "Vajangu Perefarm");
+    const sender = new Sender("vajanguperefarm@gmail.com", "Vajangu Perefarm");
     const recipients = [new Recipient(customerEmail, customerName)];
 
     const emailParams = new EmailParams()
