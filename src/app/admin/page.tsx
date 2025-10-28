@@ -33,6 +33,7 @@ export default function AdminPage() {
     subject: '',
     message: ''
   });
+  const [adding, setAdding] = useState(false);
 
   // Check for existing authentication on component mount
   useEffect(() => {
@@ -534,7 +535,10 @@ export default function AdminPage() {
   }
 
   async function addNewProduct() {
-    if (!newProduct.name.trim() || !newProduct.price || !newProduct.weight) {
+    const normalizedPrice = parseFloat((newProduct.price || '').toString().replace(',', '.'));
+    const normalizedWeight = parseFloat((newProduct.weight || '').toString().replace(',', '.'));
+
+    if (!newProduct.name.trim() || !Number.isFinite(normalizedPrice) || normalizedPrice <= 0 || !Number.isFinite(normalizedWeight) || normalizedWeight <= 0) {
       alert('Palun täitke kõik väljad!');
       return;
     }
@@ -542,35 +546,37 @@ export default function AdminPage() {
     if (!selectedOrder) return;
 
     try {
+      setAdding(true);
       const res = await fetch('/api/admin/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orderId: selectedOrder.id,
           productName: newProduct.name,
-          unitPrice: parseFloat(newProduct.price),
-          weight: parseFloat(newProduct.weight),
+          unitPrice: normalizedPrice,
+          weight: normalizedWeight,
           uom: newProduct.uom
         })
       });
 
       const result = await res.json();
       
-      if (result.ok) {
+      if (result.ok && result.orderLine) {
         alert('Toode lisatud!');
-        setNewProduct({ name: '', price: '', weight: '', uom: 'kg' });
-        setShowAddProduct(false);
-        // Refresh the selected order
-        const updatedOrder = orders.find(o => o.id === selectedOrder.id);
-        if (updatedOrder) {
-          setSelectedOrder(updatedOrder);
-        }
+        // Keep section open but clear fields
+        setNewProduct({ name: '', price: '', weight: '', uom: newProduct.uom });
+
+        // Merge new line (API already formatted it with product info)
+        setSelectedOrder(prev => prev ? { ...prev, lines: [...prev.lines, result.orderLine] } : prev);
+        setOrders(prev => prev.map(o => o.id === selectedOrder.id ? { ...o, lines: [...o.lines, result.orderLine] } : o));
       } else {
-        alert('Viga toote lisamisel: ' + result.error);
+        alert('Viga toote lisamisel: ' + (result.error || 'Teadet ei tagastatud'));
       }
     } catch (error) {
       console.error('Failed to add product:', error);
       alert('Viga toote lisamisel');
+    } finally {
+      setAdding(false);
     }
   }
 
@@ -1075,14 +1081,14 @@ export default function AdminPage() {
                         type="number"
                         placeholder="Hind"
                         value={newProduct.price}
-                        onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
+                        onChange={(e) => setNewProduct({...newProduct, price: e.target.value.replace(',', '.')})}
                         className="border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       />
                       <input
                         type="number"
                         placeholder="Kaal"
                         value={newProduct.weight}
-                        onChange={(e) => setNewProduct({...newProduct, weight: e.target.value})}
+                        onChange={(e) => setNewProduct({...newProduct, weight: e.target.value.replace(',', '.')})}
                         className="border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       />
                       <select
@@ -1094,10 +1100,12 @@ export default function AdminPage() {
                         <option value="tk">tk</option>
                       </select>
                       <button
+                        type="button"
                         onClick={addNewProduct}
-                        className="col-span-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                        disabled={adding || !newProduct.name.trim() || !(Number.isFinite(parseFloat((newProduct.price||'').toString())) && parseFloat((newProduct.price||'').toString()) > 0) || !(Number.isFinite(parseFloat((newProduct.weight||'').toString())) && parseFloat((newProduct.weight||'').toString()) > 0)}
+                        className={`col-span-4 px-4 py-2 rounded ${adding || !newProduct.name.trim() || !(Number.isFinite(parseFloat((newProduct.price||'').toString())) && parseFloat((newProduct.price||'').toString()) > 0) || !(Number.isFinite(parseFloat((newProduct.weight||'').toString())) && parseFloat((newProduct.weight||'').toString()) > 0) ? 'bg-green-400 cursor-not-allowed text-white' : 'bg-green-600 text-white hover:bg-green-700'}`}
                       >
-                        Lisa toode
+                        {adding ? 'Lisamine…' : 'Lisa toode'}
                       </button>
                     </div>
                   )}

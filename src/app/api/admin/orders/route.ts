@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from '@supabase/supabase-js';
+import { randomUUID } from 'crypto';
 
 function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -122,27 +123,46 @@ export async function POST(req: Request) {
     }
 
     // Create a new order line with custom product using camelCase columns
+    // Generate ID explicitly since Supabase might not be applying the default
+    const insertData: any = {
+      id: randomUUID(),
+      orderId: orderId,
+      productSku: customSku,
+      uom: uom.toUpperCase(),
+      requestedQty: parseFloat(weight),
+      packedWeight: parseFloat(weight),
+      packedQty: parseFloat(weight),
+      unitPrice: parseFloat(unitPrice),
+      substitutionAllowed: false
+    };
+    
+    console.log('[admin/orders] Inserting order line:', JSON.stringify(insertData, null, 2));
+    
     const { data: orderLine, error: lineError } = await sb
       .from('OrderLine')
-      .insert({
-        orderId: orderId,
-        productSku: customSku,
-        uom: uom.toUpperCase(),
-        requestedQty: parseFloat(weight),
-        packedWeight: parseFloat(weight),
-        packedQty: parseFloat(weight),
-        unitPrice: parseFloat(unitPrice),
-        substitutionAllowed: false
-      })
+      .insert(insertData)
       .select()
       .single();
+
+    console.log('[admin/orders] Order line insert result:', { orderLine, error: lineError });
 
     if (lineError) {
       console.error('[admin/orders] Failed to add product to order:', lineError);
       return NextResponse.json({ ok: false, error: "Failed to add product to order" }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, orderLine });
+    // Format the orderLine to include the product information for the UI
+    const formattedLine = orderLine ? {
+      ...orderLine,
+      product: {
+        name: productName,
+        sku: customSku,
+        category: 'Kohandatud tooted',
+        groupName: 'Kohandatud tooted'
+      }
+    } : null;
+
+    return NextResponse.json({ ok: true, orderLine: formattedLine });
   } catch (error) {
     console.error('Failed to add product to order:', error);
     return NextResponse.json({ ok: false, error: "Failed to add product to order" }, { status: 500 });

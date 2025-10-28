@@ -1,0 +1,18 @@
+{
+  "channel": "veeb",
+  "customer": {
+    "name": "Test Customer",
+    "phone": "+3725551234",
+    "email": "test@example.com"
+  },
+  "ring_id": "ring-1",
+  "stop_id": "stop-1",
+  "payment_method": "sularaha",
+  "order_lines": [
+    {
+      "sku": "TEST-001",
+      "uom": "kg",
+      "ordered_qty": 2.5
+    }
+  ]
+}
