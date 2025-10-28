@@ -108,10 +108,13 @@ export async function POST(req: Request) {
       }
       customerId = existingCustomer.id;
     } else {
-      // Create new customer
+      // Create new customer with generated ID
+      const newCustomerId = `customer_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      console.log('[api/orders POST] Creating new customer with ID:', newCustomerId);
       const { data: newCustomer, error: createError } = await sb
         .from('Customer')
         .insert({
+          id: newCustomerId,
           name: b.customer.name,
           phone: b.customer.phone,
           email: b.customer.email,
@@ -126,7 +129,7 @@ export async function POST(req: Request) {
         console.error('[api/orders] Failed to create customer:', createError);
         return NextResponse.json({ok:false, error:"Failed to create customer"},{status:500});
       }
-      customerId = newCustomer.id;
+      customerId = newCustomer.id || newCustomerId;
     }
 
     // 4) Check for duplicate orders (last 24h) using customerId
