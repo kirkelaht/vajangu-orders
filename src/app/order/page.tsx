@@ -127,7 +127,17 @@ export default function OrderPage(){
           if (!cancelled) {
             setProductGroups(grouped as ApiProductGroup[]);
             const cats = grouped.map((g: any) => g.group);
-            setCategories(cats);
+            
+            // Custom sorting: "Värske sealiha" first, "Kinkekaart" last
+            const sortedCats = cats.sort((a, b) => {
+              if (a === "Värske sealiha") return -1;
+              if (b === "Värske sealiha") return 1;
+              if (a === "Kinkekaart") return 1;
+              if (b === "Kinkekaart") return -1;
+              return a.localeCompare(b); // alphabetical for others
+            });
+            
+            setCategories(sortedCats);
           }
           apiSucceeded = true;
           return;
@@ -164,7 +174,17 @@ export default function OrderPage(){
             if (!cancelled) {
               setProductGroups(transformed as ApiProductGroup[]);
               const cats = transformed.map((g: ApiProductGroup) => g.group);
-              setCategories(cats);
+              
+              // Custom sorting: "Värske sealiha" first, "Kinkekaart" last
+              const sortedCats = cats.sort((a, b) => {
+                if (a === "Värske sealiha") return -1;
+                if (b === "Värske sealiha") return 1;
+                if (a === "Kinkekaart") return 1;
+                if (b === "Kinkekaart") return -1;
+                return a.localeCompare(b); // alphabetical for others
+              });
+              
+              setCategories(sortedCats);
             }
           } else {
             if (!cancelled) setLastError('Fallback file missing groups[]');
