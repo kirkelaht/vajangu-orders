@@ -74,6 +74,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Order details incomplete" }, { status: 404 });
     }
 
+    // Check if MailerSend is configured and verified
+    if (!process.env.MAILERSEND_API_KEY) {
+      console.log('[admin/send-email] MailerSend API key not configured');
+      return NextResponse.json({ ok: false, error: "Email service not configured" }, { status: 503 });
+    }
+
+    // Temporary: Check if account is verified (remove this after verification)
+    const isVerified = process.env.MAILERSEND_VERIFIED === 'true';
+    if (!isVerified) {
+      console.log('[admin/send-email] MailerSend account not yet verified');
+      return NextResponse.json({ 
+        ok: false, 
+        error: "Email service is being verified. Please try again in 24 hours." 
+      }, { status: 503 });
+    }
+
     // Send custom email
     try {
       const emailResult = await sendCustomEmail(
