@@ -77,6 +77,10 @@ export async function POST(req: Request) {
 
     const isHomeDelivery = ring.region === 'Viru-Nigula-Sonda ring';
 
+    // Generate order ID
+    const orderId = `order_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    console.log('[api/orders POST] Generated order ID:', orderId);
+
     // 3) Upsert customer first
     console.log('[api/orders POST] Upserting customer:', b.customer.email);
     const { data: existingCustomer } = await sb
@@ -151,31 +155,42 @@ export async function POST(req: Request) {
       "e_post": "EMAIL"
     };
 
+    console.log('[api/orders POST] Creating order with ID:', orderId);
+    const orderData = {
+      id: orderId,
+      channel: channelMap[b.channel] || "WEB",
+      customerId: customerId,
+      ringId: b.ring_id,
+      stopId: b.stop_id,
+      deliveryType: isHomeDelivery ? "HOME" : "STOP",
+      deliveryAddress: isHomeDelivery ? b.notes_customer : (b.delivery_address || null),
+      status: "NEW",
+      notesCustomer: b.notes_customer || null,
+      notesInternal: b.notes_internal || null,
+      paymentMethod: b.payment_method === "ülekandega" ? "TRANSFER" : "CASH",
+      paymentStatus: "UNPAID"
+    };
+    console.log('[api/orders POST] Order data:', JSON.stringify(orderData));
+    
     const { data: order, error: orderError } = await sb
       .from('Order')
-      .insert({
-        channel: channelMap[b.channel] || "WEB",
-        customerId: customerId,
-        ringId: b.ring_id,
-        stopId: b.stop_id,
-        deliveryType: isHomeDelivery ? "HOME" : "STOP",
-        deliveryAddress: isHomeDelivery ? b.notes_customer : (b.delivery_address || null),
-        status: "NEW",
-        notesCustomer: b.notes_customer || null,
-        notesInternal: b.notes_internal || null,
-        paymentMethod: b.payment_method === "ülekandega" ? "TRANSFER" : "CASH",
-        paymentStatus: "UNPAID"
-      })
+      .insert(orderData)
       .select('id')
       .single();
 
-    if (orderError || !order) {
+    if (orderError) {
       console.error('[api/orders] Failed to create order:', orderError);
+      return NextResponse.json({ok:false, error:`Failed to create order: ${orderError.message}`},{status:500});
+    }
+    if (!order) {
+      console.error('[api/orders] Order not returned');
       return NextResponse.json({ok:false, error:"Failed to create order"},{status:500});
     }
+    console.log('[api/orders POST] Order created successfully with ID:', order.id);
 
     // 6) Create order lines with camelCase columns
-    const orderLines = b.order_lines.map(line => ({
+    const orderLines = b.order_lines.map((line, index) => ({
+      id: `orderline_${Date.now()}_${index}_${Math.random().toString(36).substring(7)}`,
       orderId: order.id,
       productSku: line.sku,
       uom: line.uom.toUpperCase() as 'KG' | 'TK',
@@ -183,6 +198,8 @@ export async function POST(req: Request) {
       substitutionAllowed: !!line.substitution_allowed,
       unitPrice: line.unit_price || null
     }));
+    
+    console.log('[api/orders POST] Creating', orderLines.length, 'order lines');
 
     const { error: linesError } = await sb
       .from('OrderLine')
