@@ -55,12 +55,14 @@ export async function GET() {
     }
     console.log('[api/products] groups:', dbg);
 
-    // Sort groups with custom order: "Värske sealiha" first, "Kinkekaart" last, filter out "Kohandatud tooted"
+    // Sort groups with custom order: "Värske sealiha" first, "Hakklihad" second, "Kinkekaart" last, filter out "Kohandatud tooted"
     const out = Object.entries(groups)
       .filter(([group]) => group !== "Kohandatud tooted")
       .sort(([a], [b]) => {
         if (a === "Värske sealiha") return -1;
         if (b === "Värske sealiha") return 1;
+        if (a === "Hakklihad") return -1;
+        if (b === "Hakklihad") return 1;
         if (a === "Kinkekaart") return 1;
         if (b === "Kinkekaart") return -1;
         return a.localeCompare(b, 'et'); // alphabetical for others

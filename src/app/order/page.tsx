@@ -128,12 +128,14 @@ export default function OrderPage(){
             setProductGroups(grouped as ApiProductGroup[]);
             const cats = grouped.map((g: any) => g.group);
             
-            // Filter out "Kohandatud tooted" and sort: "Värske sealiha" first, "Kinkekaart" last
+            // Filter out "Kohandatud tooted" and sort: "Värske sealiha" first, "Hakklihad" second, "Kinkekaart" last
             const filteredAndSorted = cats
               .filter(cat => cat !== "Kohandatud tooted")
               .sort((a, b) => {
                 if (a === "Värske sealiha") return -1;
                 if (b === "Värske sealiha") return 1;
+                if (a === "Hakklihad") return -1;
+                if (b === "Hakklihad") return 1;
                 if (a === "Kinkekaart") return 1;
                 if (b === "Kinkekaart") return -1;
                 return a.localeCompare(b); // alphabetical for others
@@ -177,12 +179,14 @@ export default function OrderPage(){
               setProductGroups(transformed as ApiProductGroup[]);
               const cats = transformed.map((g: ApiProductGroup) => g.group);
               
-              // Filter out "Kohandatud tooted" and sort: "Värske sealiha" first, "Kinkekaart" last
+              // Filter out "Kohandatud tooted" and sort: "Värske sealiha" first, "Hakklihad" second, "Kinkekaart" last
               const filteredAndSorted = cats
                 .filter(cat => cat !== "Kohandatud tooted")
                 .sort((a, b) => {
                   if (a === "Värske sealiha") return -1;
                   if (b === "Värske sealiha") return 1;
+                  if (a === "Hakklihad") return -1;
+                  if (b === "Hakklihad") return 1;
                   if (a === "Kinkekaart") return 1;
                   if (b === "Kinkekaart") return -1;
                   return a.localeCompare(b); // alphabetical for others
