@@ -60,21 +60,10 @@ export async function POST(req: Request) {
 
     const isHomeDelivery = ring.region === 'Viru-Nigula-Sonda ring';
 
-    // 3) Check for duplicate orders (last 24h)
-    const { data: duplicateOrder } = await sb
-      .from('Order')
-      .select('id')
-      .eq('customer.phone', b.customer.phone)
-      .eq('ring_id', b.ring_id)
-      .eq('stop_id', b.stop_id)
-      .gte('created_at', new Date(Date.now() - 24*60*60*1000).toISOString())
-      .limit(1)
-      .single();
-
-    // 4) Upsert customer
+    // 3) Upsert customer first
     const { data: existingCustomer } = await sb
       .from('Customer')
-      .select('id, name, phone, email, org_name, reg_code, segment')
+      .select('id, name, phone, email, orgName, regCode, segment')
       .eq('email', b.customer.email)
       .single();
 
@@ -86,8 +75,8 @@ export async function POST(req: Request) {
         .update({
           name: b.customer.name,
           phone: b.customer.phone,
-          org_name: b.customer.org_name || null,
-          reg_code: b.customer.reg_code || null
+          orgName: b.customer.org_name || null,
+          regCode: b.customer.reg_code || null
         })
         .eq('id', existingCustomer.id);
       
@@ -104,8 +93,8 @@ export async function POST(req: Request) {
           name: b.customer.name,
           phone: b.customer.phone,
           email: b.customer.email,
-          org_name: b.customer.org_name || null,
-          reg_code: b.customer.reg_code || null,
+          orgName: b.customer.org_name || null,
+          regCode: b.customer.reg_code || null,
           segment: "RETAIL"
         })
         .select('id')
@@ -118,7 +107,19 @@ export async function POST(req: Request) {
       customerId = newCustomer.id;
     }
 
-    // 5) Create order
+    // 4) Check for duplicate orders (last 24h) using customerId
+    const { data: duplicateOrders } = await sb
+      .from('Order')
+      .select('id')
+      .eq('customerId', customerId)
+      .eq('ringId', b.ring_id)
+      .eq('stopId', b.stop_id)
+      .gte('createdAt', new Date(Date.now() - 24*60*60*1000).toISOString())
+      .limit(1);
+
+    const duplicateOrder = duplicateOrders && duplicateOrders.length > 0 ? duplicateOrders[0] : null;
+
+    // 5) Create order with camelCase columns
     const channelMap: Record<string, string> = {
       "veeb": "WEB",
       "telefon": "PHONE",
@@ -130,15 +131,16 @@ export async function POST(req: Request) {
       .from('Order')
       .insert({
         channel: channelMap[b.channel] || "WEB",
-        customer_id: customerId,
-        ring_id: b.ring_id,
-        stop_id: b.stop_id,
-        delivery_type: isHomeDelivery ? "HOME" : "STOP",
-        delivery_address: isHomeDelivery ? b.notes_customer : (b.delivery_address || null),
+        customerId: customerId,
+        ringId: b.ring_id,
+        stopId: b.stop_id,
+        deliveryType: isHomeDelivery ? "HOME" : "STOP",
+        deliveryAddress: isHomeDelivery ? b.notes_customer : (b.delivery_address || null),
         status: "NEW",
-        notes_customer: b.notes_customer || null,
-        notes_internal: b.notes_internal || null,
-        payment_method: b.payment_method === "ülekandega" ? "TRANSFER" : "CASH"
+        notesCustomer: b.notes_customer || null,
+        notesInternal: b.notes_internal || null,
+        paymentMethod: b.payment_method === "ülekandega" ? "TRANSFER" : "CASH",
+        paymentStatus: "UNPAID"
       })
       .select('id')
       .single();
@@ -148,14 +150,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ok:false, error:"Failed to create order"},{status:500});
     }
 
-    // 6) Create order lines
+    // 6) Create order lines with camelCase columns
     const orderLines = b.order_lines.map(line => ({
-      order_id: order.id,
-      product_sku: line.sku,
+      orderId: order.id,
+      productSku: line.sku,
       uom: line.uom.toUpperCase() as 'KG' | 'TK',
-      requested_qty: line.ordered_qty,
-      substitution_allowed: !!line.substitution_allowed,
-      unit_price: line.unit_price || null
+      requestedQty: line.ordered_qty,
+      substitutionAllowed: !!line.substitution_allowed,
+      unitPrice: line.unit_price || null
     }));
 
     const { error: linesError } = await sb

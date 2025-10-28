@@ -49,6 +49,18 @@ export default function AdminPage() {
     }
   }, [isAuthenticated]);
 
+  // Auto-refresh orders every 60 seconds
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const intervalId = setInterval(() => {
+      console.log('[Admin] Auto-refreshing orders...');
+      fetchOrders();
+    }, 60000); // 60 seconds
+
+    return () => clearInterval(intervalId);
+  }, [isAuthenticated]);
+
   useEffect(() => {
     applyFilters();
   }, [orders, filters]);
@@ -223,131 +235,156 @@ export default function AdminPage() {
     printWindow.print();
   }
 
-  function printPackingList() {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+  async function printPackingList() {
+    // Get the first ring from filtered orders
+    const firstRing = filteredOrders[0]?.ring?.id;
+    if (!firstRing) {
+      alert('Ei ole tellimusi printimiseks!');
+      return;
+    }
 
-    // Group orders by stop and ring
-    const groupedOrders: {[key: string]: Order[]} = {};
-    filteredOrders.forEach(order => {
-      const key = `${order.stop.name} - ${order.ring.region}`;
-      if (!groupedOrders[key]) {
-        groupedOrders[key] = [];
+    try {
+      const res = await fetch(`/api/admin/print/packing?ringId=${firstRing}`);
+      const data = await res.json();
+
+      if (!data.ok) {
+        alert('Viga andmete laadimisel: ' + data.error);
+        return;
       }
-      groupedOrders[key].push(order);
-    });
 
-    const packingContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Pakkimise nimekiri</title>
-        <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .section { margin-bottom: 30px; page-break-inside: avoid; }
-          .section h2 { background: #f0f0f0; padding: 10px; margin: 0 0 15px 0; }
-          .order { margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; }
-          .order-header { font-weight: bold; margin-bottom: 10px; }
-          .products { margin-left: 20px; }
-          .product { margin-bottom: 5px; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>🐷 Vajangu Perefarm</h1>
-          <h2>Pakkimise nimekiri</h2>
-          <p>Kuupäev: ${new Date().toLocaleDateString('et-EE')}</p>
-        </div>
-        
-        ${Object.entries(groupedOrders).map(([key, orders]) => `
-          <div class="section">
-            <h2>${key}</h2>
-            ${orders.map(order => `
-              <div class="order">
-                <div class="order-header">
-                  ${order.customer.name} (${order.customer.phone}) - Tellimus ${order.id.slice(-8)}
-                </div>
-                <div class="products">
-                  ${order.lines.map(line => `
-                    <div class="product">
-                      ${line.product.name} - ${line.requestedQty} ${line.uom.toLowerCase()}
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-            `).join('')}
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) return;
+
+      const packingContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Pakkimise nimekiri</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .section { margin-bottom: 30px; page-break-inside: avoid; }
+            .section h2 { background: #f0f0f0; padding: 10px; margin: 0 0 15px 0; }
+            .order { margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; }
+            .order-header { font-weight: bold; margin-bottom: 10px; }
+            .products { margin-left: 20px; }
+            .product { margin-bottom: 5px; }
+            .total { margin-top: 10px; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>🐷 Vajangu Perefarm</h1>
+            <h2>Pakkimise nimekiri</h2>
+            <p>Ring: ${data.ring.region}</p>
+            <p>Kuupäev: ${new Date(data.ring.ringDate).toLocaleDateString('et-EE')}</p>
           </div>
-        `).join('')}
-      </body>
-      </html>
-    `;
+          
+          ${data.stopGroups.map((group: any) => `
+            <div class="section">
+              <h2>${group.stop.name} - ${data.ring.region}</h2>
+              ${group.orders.map((order: any) => `
+                <div class="order">
+                  <div class="order-header">
+                    ${order.customer.name} (${order.customer.phone}) - Tellimus ${order.id.slice(-8)}
+                  </div>
+                  <div class="products">
+                    ${order.lines.map((line: any) => `
+                      <div class="product">
+                        ${line.product.name} - ${line.requestedQty} ${line.uom.toLowerCase()}
+                      </div>
+                    `).join('')}
+                  </div>
+                  <div class="total">
+                    Kokku: ${order.orderTotal.toFixed(2)}€
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `).join('')}
+        </body>
+        </html>
+      `;
 
-    printWindow.document.write(packingContent);
-    printWindow.document.close();
-    printWindow.print();
+      printWindow.document.write(packingContent);
+      printWindow.document.close();
+      printWindow.print();
+    } catch (error) {
+      console.error('Failed to print packing list:', error);
+      alert('Viga pakkimise nimekirja printimisel');
+    }
   }
 
-  function printTransportSheet() {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+  async function printTransportSheet() {
+    // Get the first ring from filtered orders
+    const firstRing = filteredOrders[0]?.ring?.id;
+    if (!firstRing) {
+      alert('Ei ole tellimusi printimiseks!');
+      return;
+    }
 
-    // Group orders by stop, sorted by ring order
-    const groupedOrders: {[key: string]: Order[]} = {};
-    filteredOrders.forEach(order => {
-      const key = order.stop.name;
-      if (!groupedOrders[key]) {
-        groupedOrders[key] = [];
+    try {
+      const res = await fetch(`/api/admin/print/transport?ringId=${firstRing}`);
+      const data = await res.json();
+
+      if (!data.ok) {
+        alert('Viga andmete laadimisel: ' + data.error);
+        return;
       }
-      groupedOrders[key].push(order);
-    });
 
-    const transportContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Transpordi leht</title>
-        <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .section { margin-bottom: 30px; page-break-inside: avoid; }
-          .section h2 { background: #f0f0f0; padding: 10px; margin: 0 0 15px 0; }
-          .order { margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; }
-          .order-header { font-weight: bold; margin-bottom: 5px; }
-          .order-details { margin-left: 20px; font-size: 0.9em; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>🐷 Vajangu Perefarm</h1>
-          <h2>Transpordi leht</h2>
-          <p>Kuupäev: ${new Date().toLocaleDateString('et-EE')}</p>
-        </div>
-        
-        ${Object.entries(groupedOrders).map(([stopName, orders]) => `
-          <div class="section">
-            <h2>${stopName}</h2>
-            ${orders.map(order => `
-              <div class="order">
-                <div class="order-header">
-                  ${order.customer.name} (${order.customer.phone})
-                </div>
-                <div class="order-details">
-                  <p><strong>Tellimus:</strong> ${order.id.slice(-8)} | <strong>Ring:</strong> ${order.ring.region}</p>
-                  <p><strong>Tooted:</strong> ${order.lines.map(line => `${line.product.name} (${line.requestedQty} ${line.uom.toLowerCase()})`).join(', ')}</p>
-                  <p><strong>Summa:</strong> ${calculateOrderTotal(order).toFixed(2)}€</p>
-                </div>
-              </div>
-            `).join('')}
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) return;
+
+      const transportContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Transpordi leht</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .section { margin-bottom: 30px; page-break-inside: avoid; }
+            .section h2 { background: #f0f0f0; padding: 10px; margin: 0 0 15px 0; }
+            .order { margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; }
+            .order-header { font-weight: bold; margin-bottom: 5px; }
+            .order-details { margin-left: 20px; font-size: 0.9em; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>🐷 Vajangu Perefarm</h1>
+            <h2>Transpordi leht</h2>
+            <p>Ring: ${data.ring.region}</p>
+            <p>Kuupäev: ${new Date(data.ring.ringDate).toLocaleDateString('et-EE')}</p>
           </div>
-        `).join('')}
-      </body>
-      </html>
-    `;
+          
+          ${data.stopGroups.map((group: any) => `
+            <div class="section">
+              <h2>${group.stopName}</h2>
+              ${group.orders.map((order: any) => `
+                <div class="order">
+                  <div class="order-header">
+                    ${order.customerName} (${order.customerPhone})
+                  </div>
+                  <div class="order-details">
+                    <p><strong>Tooted:</strong> ${order.orderContent}</p>
+                    <p><strong>Summa:</strong> ${order.orderTotal.toFixed(2)}€</p>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `).join('')}
+        </body>
+        </html>
+      `;
 
-    printWindow.document.write(transportContent);
-    printWindow.document.close();
-    printWindow.print();
+      printWindow.document.write(transportContent);
+      printWindow.document.close();
+      printWindow.print();
+    } catch (error) {
+      console.error('Failed to print transport sheet:', error);
+      alert('Viga transpordi lehe printimisel');
+    }
   }
 
   function exportToExcel() {
@@ -738,8 +775,9 @@ export default function AdminPage() {
                 Ekspordi Excel
               </button>
               <button 
-                onClick={() => window.location.reload()}
+                onClick={() => fetchOrders()}
                 className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
+                title="Värskenda tellimusi (uuendub automaatselt iga 60 sekundi järel)"
               >
                 Värskenda
               </button>

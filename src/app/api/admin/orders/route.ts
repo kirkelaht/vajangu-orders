@@ -14,11 +14,11 @@ export async function GET() {
   try {
     const sb = getSupabase();
     
-    // Fetch all orders
+    // Fetch all orders with camelCase column names
     const { data: orders, error } = await sb
       .from('Order')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('createdAt', { ascending: false });
 
     if (error) {
       console.error('[admin/orders] Failed to fetch orders:', error);
@@ -32,28 +32,28 @@ export async function GET() {
         const { data: customer } = await sb
           .from('Customer')
           .select('*')
-          .eq('id', order.customer_id)
+          .eq('id', order.customerId)
           .single();
 
         // Fetch ring
         const { data: ring } = await sb
           .from('Ring')
           .select('*')
-          .eq('id', order.ring_id)
+          .eq('id', order.ringId)
           .single();
 
         // Fetch stop
         const { data: stop } = await sb
           .from('Stop')
           .select('*')
-          .eq('id', order.stop_id)
+          .eq('id', order.stopId)
           .single();
 
         // Fetch order lines
         const { data: lines } = await sb
           .from('OrderLine')
           .select('*')
-          .eq('order_id', order.id);
+          .eq('orderId', order.id);
 
         // Fetch products for each line
         const linesWithProducts = await Promise.all(
@@ -61,7 +61,7 @@ export async function GET() {
             const { data: product } = await sb
               .from('Product')
               .select('*')
-              .eq('sku', line.product_sku || line.productSku)
+              .eq('sku', line.productSku)
               .single();
 
             return {
@@ -101,17 +101,17 @@ export async function POST(req: Request) {
 
     const customSku = `CUSTOM_${Date.now()}`;
 
-    // Create a custom product entry first
+    // Create a custom product entry first with camelCase columns
     const { error: productError } = await sb
       .from('Product')
       .upsert({
         sku: customSku,
         name: productName,
         category: 'Kohandatud tooted',
-        group_name: 'Kohandatud tooted',
+        groupName: 'Kohandatud tooted',
         uom: uom.toUpperCase(),
         active: true,
-        catch_weight: uom.toLowerCase() === 'kg'
+        catchWeight: uom.toLowerCase() === 'kg'
       }, {
         onConflict: 'sku'
       });
@@ -121,18 +121,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Failed to create product" }, { status: 500 });
     }
 
-    // Create a new order line with custom product
+    // Create a new order line with custom product using camelCase columns
     const { data: orderLine, error: lineError } = await sb
       .from('OrderLine')
       .insert({
-        order_id: orderId,
-        product_sku: customSku,
+        orderId: orderId,
+        productSku: customSku,
         uom: uom.toUpperCase(),
-        requested_qty: parseFloat(weight),
-        packed_weight: parseFloat(weight),
-        packed_qty: parseFloat(weight),
-        unit_price: parseFloat(unitPrice),
-        substitution_allowed: false
+        requestedQty: parseFloat(weight),
+        packedWeight: parseFloat(weight),
+        packedQty: parseFloat(weight),
+        unitPrice: parseFloat(unitPrice),
+        substitutionAllowed: false
       })
       .select()
       .single();
@@ -170,10 +170,10 @@ export async function PATCH(req: Request) {
     }
 
     if (lineId && packedWeight !== undefined) {
-      // Update packed weight for a specific order line
+      // Update packed weight for a specific order line with camelCase columns
       const { error } = await sb
         .from('OrderLine')
-        .update({ packed_weight: packedWeight, packed_qty: packedWeight })
+        .update({ packedWeight: packedWeight, packedQty: packedWeight })
         .eq('id', lineId);
 
       if (error) {
