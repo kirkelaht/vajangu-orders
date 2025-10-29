@@ -34,6 +34,17 @@ export default function AdminPage() {
     message: ''
   });
   const [adding, setAdding] = useState(false);
+  
+  // Product editing state
+  const [editableProducts, setEditableProducts] = useState<Array<{
+    sku: string;
+    name: string;
+    unit: string | null;
+    priceCents: number | null;
+  }>>([]);
+  const [showProductEditor, setShowProductEditor] = useState(false);
+  const [editingProducts, setEditingProducts] = useState<{[key: string]: { price: number; weightRange: string }}>({});
+  const [savingProducts, setSavingProducts] = useState<{[key: string]: boolean}>({});
 
   // Check for existing authentication on component mount
   useEffect(() => {
@@ -47,6 +58,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchOrders();
+      fetchEditableProducts();
     }
   }, [isAuthenticated]);
 
@@ -77,6 +89,61 @@ export default function AdminPage() {
       console.error('Failed to fetch orders:', error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchEditableProducts() {
+    try {
+      const res = await fetch('/api/admin/products');
+      const data = await res.json();
+      if (data.ok && data.products) {
+        setEditableProducts(data.products);
+        // Initialize editing state with current values
+        const editing: {[key: string]: { price: number; weightRange: string }} = {};
+        data.products.forEach((p: any) => {
+          const weightMatch = p.name.match(/kaalub\s+(\d+-\d+)kg/);
+          const weightRange = weightMatch ? weightMatch[1] : '';
+          editing[p.sku] = {
+            price: p.priceCents ? p.priceCents / 100 : 0,
+            weightRange: weightRange
+          };
+        });
+        setEditingProducts(editing);
+      }
+    } catch (error) {
+      console.error('Failed to fetch editable products:', error);
+    }
+  }
+
+  async function updateProduct(sku: string) {
+    const productData = editingProducts[sku];
+    if (!productData) return;
+
+    try {
+      setSavingProducts({...savingProducts, [sku]: true});
+      const res = await fetch('/api/admin/products', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sku,
+          priceCents: productData.price,
+          weightRange: productData.weightRange || undefined
+        })
+      });
+
+      const result = await res.json();
+      
+      if (result.ok) {
+        alert('Toode uuendatud!');
+        await fetchEditableProducts(); // Refresh list
+      } else {
+        alert('Viga toote uuendamisel: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Failed to update product:', error);
+      alert('Viga toote uuendamisel');
+    } finally {
+      setSavingProducts({...savingProducts, [sku]: false});
     }
   }
 
@@ -791,6 +858,89 @@ export default function AdminPage() {
           </div>
         </div>
       </header>
+
+      {/* Product Editor */}
+      {showProductEditor && (
+        <div className="bg-blue-50 border-b border-blue-200 p-6">
+          <div className="container mx-auto">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Toodete hinda ja kaalu muutmine</h2>
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="space-y-4">
+                {editableProducts.map((product) => {
+                  const editing = editingProducts[product.sku] || { price: 0, weightRange: '' };
+                  const weightMatch = product.name.match(/kaalub\s+(\d+-\d+)kg/);
+                  const currentWeight = weightMatch ? weightMatch[1] : '';
+                  
+                  return (
+                    <div key={product.sku} className="border border-gray-200 rounded-lg p-4">
+                      <div className="font-semibold text-gray-800 mb-3">{product.name}</div>
+                      <div className="grid grid-cols-3 gap-4 items-end">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Hind (€)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={editing.price || ''}
+                            onChange={(e) => {
+                              setEditingProducts({
+                                ...editingProducts,
+                                [product.sku]: {
+                                  ...editing,
+                                  price: parseFloat(e.target.value) || 0
+                                }
+                              });
+                            }}
+                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Kaal (kg) (nt: 20-25)</label>
+                          <input
+                            type="text"
+                            placeholder="20-25"
+                            value={editing.weightRange}
+                            onChange={(e) => {
+                              setEditingProducts({
+                                ...editingProducts,
+                                [product.sku]: {
+                                  ...editing,
+                                  weightRange: e.target.value
+                                }
+                              });
+                            }}
+                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          />
+                          {currentWeight && (
+                            <p className="text-xs text-gray-500 mt-1">Praegune: {currentWeight}kg</p>
+                          )}
+                        </div>
+                        <div>
+                          <button
+                            onClick={() => updateProduct(product.sku)}
+                            disabled={savingProducts[product.sku]}
+                            className={`w-full px-4 py-2 rounded text-white ${
+                              savingProducts[product.sku]
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-indigo-600 hover:bg-indigo-700'
+                            }`}
+                          >
+                            {savingProducts[product.sku] ? 'Salvestamine...' : 'Salvesta'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                <p className="text-sm text-yellow-800">
+                  💡 <strong>Märkus:</strong> Kaalu muutmisel uuendatakse toote nime kaalurange. Näiteks "20-25" muudab nime osa "kaalub 20-25kg".
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white border-b border-gray-200 p-4">
