@@ -112,12 +112,27 @@ Parimate soovidega,
 Vajangu Perefarm meeskond
       `);
 
+    // Validate API key before sending
+    if (!process.env.MAILERSEND_API_KEY) {
+      console.error('MailerSend API key not configured');
+      return { success: false, error: 'MailerSend API key not configured' };
+    }
+
     const response = await mailerSend.email.send(emailParams);
-    console.log('Email sent successfully:', response);
-    return { success: true, messageId: (response as { messageId?: string }).messageId || 'unknown' };
+    console.log('Order confirmation email sent successfully:', {
+      messageId: (response as any)?.body?.message_id || (response as { messageId?: string })?.messageId || 'unknown',
+      response: JSON.stringify(response).substring(0, 200)
+    });
+    return { 
+      success: true, 
+      messageId: (response as any)?.body?.message_id || (response as { messageId?: string })?.messageId || 'unknown' 
+    };
   } catch (error) {
-    console.error('Failed to send email:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    console.error('Failed to send order confirmation email:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorDetails = error instanceof Error ? error.stack : undefined;
+    console.error('Error details:', { message: errorMessage, stack: errorDetails });
+    return { success: false, error: errorMessage };
   }
 }
 
