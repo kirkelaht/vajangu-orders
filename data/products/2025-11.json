@@ -4,7 +4,7 @@
     {
       "group": "Värske sealiha",
       "products": [
-        { "id": "sealiha-1-16kg", "name": "Sealiha 1–16 kg (OKTOOBRIKUU PAKKUMINE)", "unit": "kg", "price_cents": 450 },
+        { "id": "sealiha-1-16kg", "name": "Sealiha 1–16 kg", "unit": "kg", "price_cents": 480 },
         { "id": "veerand-esimene", "name": "Esimene veerand (tk) kaalub 20-25kg, kilohind 3,95€. Täpne hind selgub peale komplekteerimist. Siin toodud hind on ligikaudne.", "unit": "tk", "price_cents": 9500 },
         { "id": "veerand-tagumine", "name": "Tagumine veerand (tk) kaalub 15-20kg, kilohind 3,85€. Täpne hind selgub peale komplekteerimist. Siin toodud hind on ligikaudne.", "unit": "tk", "price_cents": 7000 },
         { "id": "keskosa", "name": "Keskosa (tk) kaalub 10-15kg, kilohind 5,80€. Täpne hind selgub peale komplekteerimist. Siin toodud hind on ligikaudne.", "unit": "tk", "price_cents": 7000 },
@@ -30,12 +30,13 @@
     {
       "group": "Ahju ja grillile",
       "products": [
-        { "id": "aadika-saslokk", "name": "Äädika šašlõkk (OKTOOBRIKUU PAKKUMINE)", "unit": "kg", "price_cents": 695 },
+        { "id": "aadika-saslokk", "name": "Äädika šašlõkk", "unit": "kg", "price_cents": 695 },
         { "id": "mahlane-saslokk", "name": "Mahlane šašlõkk", "unit": "kg", "price_cents": 560 },
         { "id": "ahjuvorst-seasooles", "name": "Ahjuvorst seasooles", "unit": "kg", "price_cents": 820 },
-        { "id": "ahjuvorst-vormis", "name": "Ahjuvorst vormis (ca 1.1–1.2 kg)", "unit": "kg", "price_cents": 820 },
+        { "id": "ahjuvorst-vormis", "name": "NOVEMBRI TOODE! Ahjuvorst vormis (ca 1.1–1.2 kg)", "unit": "kg", "price_cents": 795 },
+        { "id": "maitsestatud-lihaloigud", "name": "UUS TOODE! Maitsestatud lihalõigud (tomat, paprika, küüslauk, tšillipipar)", "unit": "kg", "price_cents": 695 },
         { "id": "maitsestatud-ahjupraad", "name": "Maitsestatud ahjupraad", "unit": "kg", "price_cents": 795 },
-        { "id": "koodisteik-marinaadis", "name": "Koodisteik lõunapärases marinaadis", "unit": "kg", "price_cents": 495 },
+        { "id": "koodisteik-marinaadis", "name": "Koodisteik", "unit": "kg", "price_cents": 450 },
         { "id": "praelõik-kamaraga", "name": "Praelõik kamaraga", "unit": "kg", "price_cents": 650 }
       ]
     },
@@ -43,10 +44,11 @@
       "group": "Kulinaaria",
       "products": [
         { "id": "seljakarbonaadi-loik", "name": "Seljakarbonaadi lõik", "unit": "kg", "price_cents": 650 },
-        { "id": "sealiha-guljass", "name": "Sealiha guljašš (OKTOOBRIKUU PAKKUMINE)", "unit": "kg", "price_cents": 710 },
-        { "id": "paneeritud-kotlet", "name": "Paneeritud sealihakotlet", "unit": "kg", "price_cents": 730 },
-        { "id": "sealiha-snitser", "name": "Sealiha šnitsel (ca 400g, OKTOOBRIKUU PAKKUMINE)", "unit": "kg", "price_cents": 750 },
-        { "id": "paneeritud-snitser", "name": "Paneeritud sealiha šnitsel (ca 500g)", "unit": "kg", "price_cents": 860 },
+        { "id": "ribiloik", "name": "Ribilõik", "unit": "kg", "price_cents": 700 },
+        { "id": "sealiha-guljass", "name": "Sealiha guljašš", "unit": "kg", "price_cents": 750 },
+        { "id": "paneeritud-kotlet", "name": "NOVEMBRI TOODE! Paneeritud sealihakotlet", "unit": "kg", "price_cents": 695 },
+        { "id": "sealiha-snitser", "name": "Sealiha šnitsel (ca 400g)", "unit": "kg", "price_cents": 795 },
+        { "id": "paneeritud-snitser", "name": "NOVEMBRI TOODE! Paneeritud sealiha šnitsel (ca 500g)", "unit": "kg", "price_cents": 820 },
         { "id": "peekoniviil", "name": "Peekoniviil", "unit": "kg", "price_cents": 750 },
         { "id": "delikatess-medaljon", "name": "Delikatess medaljon", "unit": "kg", "price_cents": 600 },
         { "id": "soolapekk", "name": "Soolapekk", "unit": "kg", "price_cents": 480 }
