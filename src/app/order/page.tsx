@@ -66,6 +66,7 @@ export default function OrderPage(){
   });
   const [loading,setLoading]=useState(false);
   const [privacyConsent,setPrivacyConsent]=useState(false);
+  const [marketingConsent,setMarketingConsent]=useState(false);
   const [customPrices,setCustomPrices]=useState<{[key:string]:number}>({});
 
   // Helper function to get display text for UOM, with special case for Puhastatud seasool
@@ -322,6 +323,7 @@ export default function OrderPage(){
       setProductQuantities({});
       setCustomPrices({});
       setPrivacyConsent(false);
+      setMarketingConsent(false);
     } else {
       alert(j.error);
     }
@@ -647,29 +649,62 @@ export default function OrderPage(){
                 </div>
               </div>
 
-              {/* Privacy Consent */}
+              {/* Andmekaitse ja turundusnõusolekud */}
               <div className="bg-gray-50 p-6 rounded-lg">
-                <div className="flex items-start space-x-3">
-                  <input
-                    type="checkbox"
-                    id="privacy-consent"
-                    checked={privacyConsent}
-                    onChange={(e) => setPrivacyConsent(e.target.checked)}
-                    className="mt-1 h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
-                    required
-                  />
-                  <label htmlFor="privacy-consent" className="text-sm text-gray-700">
-                    Kinnitan, et olen tutvunud{" "}
+                <div className="space-y-3" style={{ fontSize: '0.95rem', lineHeight: 1.5 }}>
+                  {/* Kohustuslik andmetöötluse nõusolek */}
+                  <div>
+                    <div className="flex items-start space-x-3">
+                      <input
+                        type="checkbox"
+                        id="consent"
+                        checked={privacyConsent}
+                        onChange={(e) => setPrivacyConsent(e.target.checked)}
+                        className="mt-1 h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+                        required
+                      />
+                      <label htmlFor="consent" className="text-sm text-gray-700">
+                        Olen tutvunud ja nõus, et{" "}
+                        <strong>Vajangu Perefarm OÜ</strong> töötleb minu isikuandmeid tellimuse täitmiseks ning{" "}
+                        <a 
+                          href="/andmekaitse" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline"
+                        >
+                          privaatsusteates kirjeldatud tingimustel
+                        </a>.
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Vabatahtlik turundusnõusolek */}
+                  <div>
+                    <div className="flex items-start space-x-3">
+                      <input
+                        type="checkbox"
+                        id="marketing"
+                        checked={marketingConsent}
+                        onChange={(e) => setMarketingConsent(e.target.checked)}
+                        className="mt-1 h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="marketing" className="text-sm text-gray-700">
+                        Soovin saada <strong>Vajangu Perefarm OÜ</strong> uudiseid ja personaalseid pakkumisi e-posti teel.
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Väike selgitus */}
+                  <p className="text-sm text-gray-600 mt-3">
+                    Nõusoleku võib igal ajal tagasi võtta, kirjutades aadressil{" "}
                     <a 
-                      href="/privacy-policy" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
+                      href="mailto:vajanguperefarm@gmail.com" 
                       className="text-blue-600 hover:text-blue-800 underline"
                     >
-                      Vajangu Perefarm OÜ isikunadmete töötlemise eeskirja
-                    </a>{" "}
-                    sisuga ja annan nõusoleku oma isikuandmete töötlemiseks eeskirjas toodud eesmärkidel ja tingimustel.
-                  </label>
+                      vajanguperefarm@gmail.com
+                    </a>.
+                    {" "}Tagasivõtmine ei mõjuta varasema töötlemise seaduslikkust.
+                  </p>
                 </div>
               </div>
 
