@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from '@supabase/supabase-js';
+import { sendOrderConfirmationEmail } from '@/lib/email';
 
 function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -210,13 +211,57 @@ export async function POST(req: Request) {
       return NextResponse.json({ok:false, error:"Failed to create order lines"},{status:500});
     }
 
-    // TODO: Send confirmation email when email service is set up
-    // try {
-    //   const stop = await sb.from('Stop').select('name').eq('id', b.stop_id).single();
-    //   await sendOrderConfirmationEmail(customer.email, ...);
-    // } catch (emailError) {
-    //   console.error('Failed to send confirmation email:', emailError);
-    // }
+    // 7) Send order confirmation email
+    try {
+      // Fetch stop details for email
+      const { data: stop, error: stopError } = await sb
+        .from('Stop')
+        .select('name')
+        .eq('id', b.stop_id)
+        .single();
+
+      if (stopError || !stop) {
+        console.error('[api/orders] Failed to fetch stop for email:', stopError);
+        // Continue anyway - don't fail order if we can't fetch stop
+      } else {
+        // Fetch order lines with product details
+        const { data: orderLines, error: linesFetchError } = await sb
+          .from('OrderLine')
+          .select('productSku, requestedQty, uom, Product:productSku(name)')
+          .eq('orderId', order.id);
+
+        if (!linesFetchError && orderLines) {
+          // Build products array for email
+          const products = orderLines.map((line: any) => ({
+            name: line.Product?.name || line.productSku || 'Unknown product',
+            sku: line.productSku,
+            quantity: line.requestedQty,
+            uom: line.uom?.toLowerCase() || 'kg'
+          }));
+
+          // Send confirmation email
+          await sendOrderConfirmationEmail(
+            b.customer.email,
+            b.customer.name,
+            order.id,
+            {
+              ring: ring.region,
+              stop: stop.name,
+              deliveryType: isHomeDelivery ? 'HOME' : 'STOP',
+              deliveryAddress: isHomeDelivery ? b.notes_customer : undefined,
+              paymentMethod: b.payment_method === "ülekandega" ? 'TRANSFER' : 'CASH',
+              products: products
+            }
+          );
+          console.log('[api/orders] Order confirmation email sent successfully');
+        } else {
+          console.error('[api/orders] Failed to fetch order lines for email:', linesFetchError);
+        }
+      }
+    } catch (emailError) {
+      console.error('[api/orders] Failed to send confirmation email:', emailError);
+      // Don't fail the order if email fails - order was successfully created
+    }
 
     return NextResponse.json({ 
       ok: true, 
