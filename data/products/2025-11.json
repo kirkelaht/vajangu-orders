@@ -57,20 +57,24 @@
     {
       "group": "Subproduktid",
       "products": [
-        { "id": "seakeel", "name": "Seakeel", "unit": "kg", "price_cents": 550 },
+        { "id": "seakeel", "name": "Seakeel", "unit": "kg", "price_cents": 570 },
         { "id": "seasüda", "name": "Seasüda", "unit": "kg", "price_cents": 385 },
-        { "id": "seamaks", "name": "Seamaks (OKTOOBRIKUU PAKKUMINE)", "unit": "kg", "price_cents": 170 },
-        { "id": "seaneer", "name": "Seaneer", "unit": "kg", "price_cents": 160 },
-        { "id": "seapea", "name": "Seapea (OKTOOBRIKUU PAKKUMINE)", "unit": "kg", "price_cents": 15 },
+        { "id": "seamaks", "name": "Seamaks", "unit": "kg", "price_cents": 200 },
+        { "id": "seaneer", "name": "NOVEMBRI TOODE! Seaneer", "unit": "kg", "price_cents": 140 },
+        { "id": "seajalg", "name": "Seajalg", "unit": "kg", "price_cents": 150 },
+        { "id": "koot", "name": "Koot", "unit": "kg", "price_cents": 375 },
         { "id": "seasaba", "name": "Seasaba", "unit": "kg", "price_cents": 420 },
+        { "id": "seapea", "name": "NOVEMBRI TOODE! Seapea (seapea ilma kõrva ja põseta)", "unit": "kg", "price_cents": 5 },
         { "id": "seakõrv", "name": "Seakõrv", "unit": "kg", "price_cents": 375 },
         { "id": "seakamar", "name": "Seakamar", "unit": "kg", "price_cents": 30 },
         { "id": "rulaadikamar", "name": "Rulaadikamar", "unit": "kg", "price_cents": 100 },
         { "id": "searagu", "name": "Searaguu", "unit": "kg", "price_cents": 175 },
+        { "id": "supiliha", "name": "Supiliha", "unit": "kg", "price_cents": 370 },
         { "id": "läbikasvanud-pekiliha", "name": "Läbikasvanud pekiliha", "unit": "kg", "price_cents": 380 },
         { "id": "põseliha", "name": "Põseliha", "unit": "kg", "price_cents": 250 },
         { "id": "sea-ploomirasv", "name": "Sea ploomirasv", "unit": "kg", "price_cents": 10 },
         { "id": "seakondid", "name": "Seakondid lemmikutele", "unit": "kg", "price_cents": 70 },
+        { "id": "lemmikloomadele", "name": "NOVEMBRI TOODE! Lemmikloomadele", "unit": "kg", "price_cents": 85 },
         { "id": "puhastatud-seasool", "name": "Puhastatud seasool", "unit": "meeter", "price_cents": 100 }
       ]
     },

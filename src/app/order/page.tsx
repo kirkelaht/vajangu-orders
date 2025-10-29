@@ -490,7 +490,13 @@ export default function OrderPage(){
                                   .replace('(12 tk pakk)', '(12 tk)')
                                   .replace('(12tk pakk)', '(12 tk)');
                                 const unitText = is12tkPack ? 'tk' : getUomDisplayText((p as any).unit || 'tk', (p as any).id as any, p as any);
-                                return (
+                                const novembriMatch = displayName.match(/^(NOVEMBRI TOODE!)(.+)$/);
+                                return novembriMatch ? (
+                                  <span className="text-gray-700 font-medium">
+                                    <span className="font-bold text-orange-600">{novembriMatch[1]}</span>
+                                    {novembriMatch[2]} ({unitText})
+                                  </span>
+                                ) : (
                                   <span className="text-gray-700 font-medium">{displayName} ({unitText})</span>
                                 );
                               })()}
@@ -592,7 +598,17 @@ export default function OrderPage(){
                         <div key={line.sku} className="flex items-center justify-between p-4 bg-white border border-gray-300 rounded-lg">
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-gray-700 font-medium">{line.name} ({getUomDisplayText(line.uom, line.sku)})</span>
+                              {(() => {
+                                const novembriMatch = line.name.match(/^(NOVEMBRI TOODE!)(.+)$/);
+                                return novembriMatch ? (
+                                  <span className="text-gray-700 font-medium">
+                                    <span className="font-bold text-orange-600">{novembriMatch[1]}</span>
+                                    {novembriMatch[2]} ({getUomDisplayText(line.uom, line.sku)})
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-700 font-medium">{line.name} ({getUomDisplayText(line.uom, line.sku)})</span>
+                                );
+                              })()}
                               <span className="text-sm text-gray-500">
                                 {line.unit_price ? `${line.unit_price.toFixed(2)}€/${getUomDisplayText(line.uom, line.sku)}` : 'Hind puudub'}
                               </span>
