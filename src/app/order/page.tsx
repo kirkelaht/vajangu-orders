@@ -224,9 +224,32 @@ export default function OrderPage(){
   },[form.ring_id]);
 
   // Get products for selected category from grouped data
-  const categoryProducts = productGroups.length > 0 
+  const categoryProductsRaw = productGroups.length > 0 
     ? productGroups.find(g => g.group === selectedCategory)?.products ?? []
-    : products.filter(p => p.category === selectedCategory);
+    : products.filter(p => (p as any).category === selectedCategory);
+
+  // Custom ordering for Suitsutooted ja konservid
+  const suitsutootedOrder = [
+    'lihaste-viinerid',
+    'tais-suitsuvorst',
+    'sealiha-konserv-240g',
+    'sealiha-konserv-12tk',
+    'seamaksa-pasteet-240g',
+    'seamaksa-pasteet-12tk',
+  ];
+  function orderForSuitsutooted(idOrSku?: string): number {
+    if (!idOrSku) return 999;
+    const i = suitsutootedOrder.indexOf(idOrSku);
+    return i === -1 ? 500 : i;
+  }
+  const categoryProducts = selectedCategory === 'Suitsutooted ja konservid'
+    ? [...categoryProductsRaw].sort((a: any, b: any) => {
+        const ka = orderForSuitsutooted(a.id || a.sku);
+        const kb = orderForSuitsutooted(b.id || b.sku);
+        if (ka !== kb) return ka - kb;
+        return (a.name || '').localeCompare(b.name || '');
+      })
+    : categoryProductsRaw;
   
   // Check if selected ring is for home delivery
   const selectedRing = rings.find((r: Ring) => r.id === form.ring_id);
@@ -458,7 +481,17 @@ export default function OrderPage(){
                         <div key={p.id || p.sku} className="flex items-center space-x-4 p-4 border border-gray-300 rounded-lg">
                           <div className="flex-1">
                             <div className="flex items-center justify-between">
-                              <span className="text-gray-700 font-medium">{p.name} ({getUomDisplayText(p.unit || 'tk', p.id, p)})</span>
+                              {(() => {
+                                const idOrSku = (p as any).id || (p as any).sku || '';
+                                const is12tkPack = idOrSku === 'sealiha-konserv-12tk' || idOrSku === 'seamaksa-pasteet-12tk';
+                                const displayName = (p.name || '')
+                                  .replace('(12 tk pakk)', '(12 tk)')
+                                  .replace('(12tk pakk)', '(12 tk)');
+                                const unitText = is12tkPack ? 'tk' : getUomDisplayText((p as any).unit || 'tk', (p as any).id as any, p as any);
+                                return (
+                                  <span className="text-gray-700 font-medium">{displayName} ({unitText})</span>
+                                );
+                              })()}
                               {p.id === 'PORK-008' ? (
                                 <span className="text-lg font-bold text-blue-600">
                                   Küsi lisainfot
