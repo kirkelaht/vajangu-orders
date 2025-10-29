@@ -1343,7 +1343,36 @@ export default function AdminPage() {
                             Tellitud: {line.requestedQty} {line.uom.toLowerCase()}
                           </div>
                           <div className="flex items-center space-x-2">
-                            <label className="text-sm text-gray-600">Pakitud:</label>
+                            <label className="text-sm text-gray-600">Hind:</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              placeholder="0.00"
+                              value={editingPrices[line.id] !== undefined ? editingPrices[line.id] : (line.unitPrice ? parseFloat(line.unitPrice.toString()) : '')}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                  setEditingPrices({
+                                    ...editingPrices,
+                                    [line.id]: 0
+                                  });
+                                } else {
+                                  const normalizedValue = value.replace(',', '.');
+                                  const parsedValue = parseFloat(normalizedValue);
+                                  if (!isNaN(parsedValue)) {
+                                    setEditingPrices({
+                                      ...editingPrices,
+                                      [line.id]: parsedValue
+                                    });
+                                  }
+                                }
+                              }}
+                              className="w-24 p-2 border border-gray-300 rounded text-center"
+                            />
+                            <span className="text-sm text-gray-600">€/{line.uom.toLowerCase()}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <label className="text-sm text-gray-600">Kogus:</label>
                             <input
                               type="number"
                               step="0.1"
@@ -1380,35 +1409,6 @@ export default function AdminPage() {
                               className="w-20 p-2 border border-gray-300 rounded text-center"
                             />
                             <span className="text-sm text-gray-600">{line.uom.toLowerCase()}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <label className="text-sm text-gray-600">Hind:</label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              placeholder="0.00"
-                              value={editingPrices[line.id] !== undefined ? editingPrices[line.id] : (line.unitPrice ? parseFloat(line.unitPrice.toString()) : '')}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                if (value === '') {
-                                  setEditingPrices({
-                                    ...editingPrices,
-                                    [line.id]: 0
-                                  });
-                                } else {
-                                  const normalizedValue = value.replace(',', '.');
-                                  const parsedValue = parseFloat(normalizedValue);
-                                  if (!isNaN(parsedValue)) {
-                                    setEditingPrices({
-                                      ...editingPrices,
-                                      [line.id]: parsedValue
-                                    });
-                                  }
-                                }
-                              }}
-                              className="w-24 p-2 border border-gray-300 rounded text-center"
-                            />
-                            <span className="text-sm text-gray-600">€/{line.uom.toLowerCase()}</span>
                           </div>
                           <div className="text-sm font-medium min-w-[80px]">
                             {(currentPrice * currentWeight).toFixed(2)}€
