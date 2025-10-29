@@ -10,7 +10,7 @@
         { "id": "keskosa", "name": "Keskosa (tk) kaalub 10-15kg, kilohind 5,80€. Täpne hind selgub peale komplekteerimist. Siin toodud hind on ligikaudne.", "unit": "tk", "price_cents": 7000 },
         { "id": "pool-siga", "name": "Pool siga (tk) kaalub 35-42kg, kilohind 3,85€. Täpne hind selgub peale komplekteerimist. Siin toodud hind on ligikaudne.", "unit": "tk", "price_cents": 15500 },
         { "id": "terve-siga", "name": "Terve siga (tk) kaalub 75-85kg, kilohind 3,85€. Täpne hind selgub peale komplekteerimist. Siin toodud hind on ligikaudne.", "unit": "tk", "price_cents": 31000 },
-        { "id": "porsas-grillimiseks", "name": "Põrsas grillimiseks/suitsutamiseks/lõkkel", "unit": "kg", "price_cents": 850 },
+        { "id": "porsas-grillimiseks", "name": "Põrsas grillimiseks/suitsutamiseks/lõkkel", "unit": "kg", "price_cents": null },
         { "id": "esimese-veerandi-tukeldus", "name": "Esimese veerandi tükeldus", "unit": "tk", "price_cents": 400 },
         { "id": "tagumise-veerandi-tukeldus", "name": "Tagumise veerandi tükeldus", "unit": "tk", "price_cents": 300 },
         { "id": "poole-sea-tukeldus", "name": "Poole sea tükeldus", "unit": "tk", "price_cents": 600 },
