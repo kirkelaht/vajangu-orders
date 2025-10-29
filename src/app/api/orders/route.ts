@@ -213,69 +213,78 @@ export async function POST(req: Request) {
 
     // 7) Send order confirmation email
     try {
-      // Fetch stop details for email
-      const { data: stop, error: stopError } = await sb
-        .from('Stop')
-        .select('name')
-        .eq('id', b.stop_id)
-        .single();
-
-      if (stopError || !stop) {
-        console.error('[api/orders] Failed to fetch stop for email:', stopError);
-        // Continue anyway - don't fail order if we can't fetch stop
+      // Check if MailerSend is configured
+      if (!process.env.MAILERSEND_API_KEY) {
+        console.log('[api/orders] MailerSend API key not configured - skipping email');
       } else {
-        // Fetch order lines
-        const { data: orderLines, error: linesFetchError } = await sb
-          .from('OrderLine')
-          .select('productSku, requestedQty, uom')
-          .eq('orderId', order.id);
+        // Fetch stop details for email
+        const { data: stop, error: stopError } = await sb
+          .from('Stop')
+          .select('name')
+          .eq('id', b.stop_id)
+          .single();
 
-        if (!linesFetchError && orderLines && orderLines.length > 0) {
-          // Fetch products for each order line (like admin endpoint does)
-          const products = await Promise.all(
-            orderLines.map(async (line: any) => {
-              const { data: product } = await sb
-                .from('Product')
-                .select('name')
-                .eq('sku', line.productSku)
-                .single();
-
-              return {
-                name: product?.name || line.productSku || 'Unknown product',
-                sku: line.productSku,
-                quantity: line.requestedQty,
-                uom: line.uom?.toLowerCase() || 'kg'
-              };
-            })
-          );
-
-          // Send confirmation email
-          const emailResult = await sendOrderConfirmationEmail(
-            b.customer.email,
-            b.customer.name,
-            order.id,
-            {
-              ring: ring.region,
-              stop: stop.name,
-              deliveryType: isHomeDelivery ? 'HOME' : 'STOP',
-              deliveryAddress: isHomeDelivery ? b.notes_customer : undefined,
-              paymentMethod: b.payment_method === "ülekandega" ? 'TRANSFER' : 'CASH',
-              products: products
-            }
-          );
-
-          if (emailResult.success) {
-            console.log('[api/orders] Order confirmation email sent successfully to:', b.customer.email);
-          } else {
-            console.error('[api/orders] Failed to send confirmation email:', emailResult.error);
-          }
+        if (stopError || !stop) {
+          console.error('[api/orders] Failed to fetch stop for email:', stopError);
+          // Continue anyway - don't fail order if we can't fetch stop
         } else {
-          console.error('[api/orders] Failed to fetch order lines for email:', linesFetchError);
-          console.error('[api/orders] Order lines data:', orderLines);
+          // Fetch order lines
+          const { data: orderLines, error: linesFetchError } = await sb
+            .from('OrderLine')
+            .select('productSku, requestedQty, uom')
+            .eq('orderId', order.id);
+
+          if (!linesFetchError && orderLines && orderLines.length > 0) {
+            console.log('[api/orders] Fetching products for email, order lines count:', orderLines.length);
+            
+            // Fetch products for each order line (like admin endpoint does)
+            const products = await Promise.all(
+              orderLines.map(async (line: any) => {
+                const { data: product } = await sb
+                  .from('Product')
+                  .select('name')
+                  .eq('sku', line.productSku)
+                  .single();
+
+                return {
+                  name: product?.name || line.productSku || 'Unknown product',
+                  sku: line.productSku,
+                  quantity: line.requestedQty,
+                  uom: line.uom?.toLowerCase() || 'kg'
+                };
+              })
+            );
+
+            console.log('[api/orders] Sending confirmation email to:', b.customer.email);
+            
+            // Send confirmation email
+            const emailResult = await sendOrderConfirmationEmail(
+              b.customer.email,
+              b.customer.name,
+              order.id,
+              {
+                ring: ring.region,
+                stop: stop.name,
+                deliveryType: isHomeDelivery ? 'HOME' : 'STOP',
+                deliveryAddress: isHomeDelivery ? b.notes_customer : undefined,
+                paymentMethod: b.payment_method === "ülekandega" ? 'TRANSFER' : 'CASH',
+                products: products
+              }
+            );
+
+            if (emailResult.success) {
+              console.log('[api/orders] Order confirmation email sent successfully to:', b.customer.email, 'Message ID:', emailResult.messageId);
+            } else {
+              console.error('[api/orders] Failed to send confirmation email:', emailResult.error);
+            }
+          } else {
+            console.error('[api/orders] Failed to fetch order lines for email:', linesFetchError);
+            console.error('[api/orders] Order lines data:', orderLines);
+          }
         }
       }
     } catch (emailError) {
-      console.error('[api/orders] Failed to send confirmation email:', emailError);
+      console.error('[api/orders] Exception in email sending:', emailError);
       // Don't fail the order if email fails - order was successfully created
     }
 

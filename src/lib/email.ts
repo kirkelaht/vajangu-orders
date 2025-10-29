@@ -58,6 +58,7 @@ export async function sendOrderConfirmationEmail(
               
               <p>Teie tellimus on edukalt edastatud ja meie meeskond hakkab sellega tegelema.</p>
               
+              
               <div class="order-details">
                 <h3>Tellimuse andmed:</h3>
                 <p><strong>Tellimuse ID:</strong> ${orderId}</p>
