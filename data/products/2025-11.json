@@ -5,7 +5,7 @@
       "group": "Värske sealiha",
       "products": [
         { "id": "sealiha-1-16kg", "name": "Sealiha 1–16 kg (OKTOOBRIKUU PAKKUMINE)", "unit": "kg", "price_cents": 450 },
-        { "id": "veerand-esimene", "name": "Esimene veerand", "unit": "kg", "price_cents": 395 },
+        { "id": "veerand-esimene", "name": "Esimene veerand (tk) kaalub 17-22kg, kilohind 3,95€. Täpne hind selgub peale komplekteerimist. Siin toodud hind on ligikaudne.", "unit": "tk", "price_cents": 8500 },
         { "id": "veerand-tagumine", "name": "Tagumine veerand", "unit": "kg", "price_cents": 385 },
         { "id": "keskosa", "name": "Keskosa", "unit": "kg", "price_cents": 580 },
         { "id": "pool-siga", "name": "Pool siga", "unit": "kg", "price_cents": 385 },
