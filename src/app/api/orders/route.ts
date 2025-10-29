@@ -224,23 +224,33 @@ export async function POST(req: Request) {
         console.error('[api/orders] Failed to fetch stop for email:', stopError);
         // Continue anyway - don't fail order if we can't fetch stop
       } else {
-        // Fetch order lines with product details
+        // Fetch order lines
         const { data: orderLines, error: linesFetchError } = await sb
           .from('OrderLine')
-          .select('productSku, requestedQty, uom, Product:productSku(name)')
+          .select('productSku, requestedQty, uom')
           .eq('orderId', order.id);
 
-        if (!linesFetchError && orderLines) {
-          // Build products array for email
-          const products = orderLines.map((line: any) => ({
-            name: line.Product?.name || line.productSku || 'Unknown product',
-            sku: line.productSku,
-            quantity: line.requestedQty,
-            uom: line.uom?.toLowerCase() || 'kg'
-          }));
+        if (!linesFetchError && orderLines && orderLines.length > 0) {
+          // Fetch products for each order line (like admin endpoint does)
+          const products = await Promise.all(
+            orderLines.map(async (line: any) => {
+              const { data: product } = await sb
+                .from('Product')
+                .select('name')
+                .eq('sku', line.productSku)
+                .single();
+
+              return {
+                name: product?.name || line.productSku || 'Unknown product',
+                sku: line.productSku,
+                quantity: line.requestedQty,
+                uom: line.uom?.toLowerCase() || 'kg'
+              };
+            })
+          );
 
           // Send confirmation email
-          await sendOrderConfirmationEmail(
+          const emailResult = await sendOrderConfirmationEmail(
             b.customer.email,
             b.customer.name,
             order.id,
@@ -253,9 +263,15 @@ export async function POST(req: Request) {
               products: products
             }
           );
-          console.log('[api/orders] Order confirmation email sent successfully');
+
+          if (emailResult.success) {
+            console.log('[api/orders] Order confirmation email sent successfully to:', b.customer.email);
+          } else {
+            console.error('[api/orders] Failed to send confirmation email:', emailResult.error);
+          }
         } else {
           console.error('[api/orders] Failed to fetch order lines for email:', linesFetchError);
+          console.error('[api/orders] Order lines data:', orderLines);
         }
       }
     } catch (emailError) {
