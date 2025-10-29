@@ -497,18 +497,25 @@ export default function OrderPage(){
                                   Küsi lisainfot
                                 </span>
                               ) : (p.id || p.sku) === 'PORK-056' ? (
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-sm text-gray-600">Hind:</span>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={customPrices[p.id || p.sku || ''] || ''}
-                                    onChange={(e) => setCustomPrices({...customPrices, [p.id || p.sku || '']: parseFloat(e.target.value) || 0})}
-                                    placeholder="0.00"
-                                    className="w-20 p-1 border border-gray-300 rounded text-center focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                                  />
-                                  <span className="text-sm text-gray-600">€</span>
+                                <div className="flex flex-col items-end space-y-2">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-sm text-gray-600">Hind:</span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      value={customPrices[p.id || p.sku || ''] || ''}
+                                      onChange={(e) => setCustomPrices({...customPrices, [p.id || p.sku || '']: parseFloat(e.target.value) || 0})}
+                                      placeholder="0.00"
+                                      className="w-20 p-1 border border-gray-300 rounded text-center focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                                    />
+                                    <span className="text-sm text-gray-600">€</span>
+                                  </div>
+                                  {customPrices[p.id || p.sku || ''] > 0 && (
+                                    <span className="text-lg font-bold text-green-600">
+                                      {customPrices[p.id || p.sku || ''].toFixed(2)}€
+                                    </span>
+                                  )}
                                 </div>
                               ) : (
                                 <span className="text-lg font-bold text-green-600">
