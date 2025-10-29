@@ -496,7 +496,7 @@ export default function OrderPage(){
                                 <span className="text-lg font-bold text-blue-600">
                                   Küsi lisainfot
                                 </span>
-                              ) : (p.id || p.sku) === 'PORK-056' ? (
+                              ) : ((p.id || p.sku) === 'PORK-056' || (p.id || p.sku) === 'kinkekaart') ? (
                                 <div className="flex flex-col items-end space-y-2">
                                   <div className="flex items-center space-x-2">
                                     <span className="text-sm text-gray-600">Hind:</span>
@@ -529,7 +529,7 @@ export default function OrderPage(){
                               <div className="text-sm text-gray-600 italic">
                                 Kontakteeru meiega hinna ja koguse kohta
                               </div>
-                            ) : (p.id || p.sku) === 'PORK-056' ? (
+                            ) : ((p.id || p.sku) === 'PORK-056' || (p.id || p.sku) === 'kinkekaart') ? (
                               <>
                                 <label className="text-sm text-gray-600">Kogus:</label>
                                 <input 
