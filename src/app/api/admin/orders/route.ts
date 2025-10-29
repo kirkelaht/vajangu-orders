@@ -172,7 +172,7 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const { orderId, status, lineId, packedWeight } = body;
+    const { orderId, status, lineId, packedWeight, unitPrice } = body;
 
     const sb = getSupabase();
 
@@ -189,16 +189,29 @@ export async function PATCH(req: Request) {
       }
     }
 
-    if (lineId && packedWeight !== undefined) {
-      // Update packed weight for a specific order line with camelCase columns
-      const { error } = await sb
-        .from('OrderLine')
-        .update({ packedWeight: packedWeight, packedQty: packedWeight })
-        .eq('id', lineId);
+    if (lineId) {
+      // Update order line - both weight and price can be updated
+      const updateData: any = {};
+      
+      if (packedWeight !== undefined) {
+        updateData.packedWeight = packedWeight;
+        updateData.packedQty = packedWeight;
+      }
+      
+      if (unitPrice !== undefined) {
+        updateData.unitPrice = parseFloat(unitPrice);
+      }
 
-      if (error) {
-        console.error('[admin/orders] Failed to update order line:', error);
-        return NextResponse.json({ ok: false, error: "Failed to update order line" }, { status: 500 });
+      if (Object.keys(updateData).length > 0) {
+        const { error } = await sb
+          .from('OrderLine')
+          .update(updateData)
+          .eq('id', lineId);
+
+        if (error) {
+          console.error('[admin/orders] Failed to update order line:', error);
+          return NextResponse.json({ ok: false, error: "Failed to update order line" }, { status: 500 });
+        }
       }
     }
 

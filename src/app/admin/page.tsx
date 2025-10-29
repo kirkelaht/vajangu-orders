@@ -13,6 +13,7 @@ export default function AdminPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingWeights, setEditingWeights] = useState<{[key: string]: number}>({});
+  const [editingPrices, setEditingPrices] = useState<{[key: string]: number}>({});
   const [filters, setFilters] = useState<FilterState>({
     ring: '',
     stop: '',
@@ -206,12 +207,28 @@ export default function AdminPage() {
     setSelectedOrder(order);
     setShowModal(true);
     setEditingWeights({});
+    // Initialize prices with current values
+    const initialPrices: {[key: string]: number} = {};
+    order.lines.forEach(line => {
+      if (line.unitPrice) {
+        initialPrices[line.id] = parseFloat(line.unitPrice.toString());
+      }
+    });
+    setEditingPrices(initialPrices);
   }
 
   function openOrderEdit(order: Order) {
     setSelectedOrder(order);
     setShowModal(true);
     setEditingWeights({});
+    // Initialize prices with current values
+    const initialPrices: {[key: string]: number} = {};
+    order.lines.forEach(line => {
+      if (line.unitPrice) {
+        initialPrices[line.id] = parseFloat(line.unitPrice.toString());
+      }
+    });
+    setEditingPrices(initialPrices);
     setTimeout(() => {
       const weightSection = document.querySelector('[data-weight-section]');
       if (weightSection) {
@@ -545,9 +562,50 @@ export default function AdminPage() {
               }
             : order
         ));
+        if (selectedOrder?.id === orderId) {
+          setSelectedOrder({
+            ...selectedOrder,
+            lines: selectedOrder.lines.map(line =>
+              line.id === lineId ? { ...line, packedWeight: weight } : line
+            )
+          });
+        }
       }
     } catch (error) {
       console.error('Failed to update weight:', error);
+    }
+  }
+
+  async function updateOrderLinePrice(orderId: string, lineId: string, price: number) {
+    try {
+      const res = await fetch('/api/admin/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, lineId, unitPrice: price })
+      });
+
+      if (res.ok) {
+        setOrders(orders.map(order => 
+          order.id === orderId 
+            ? {
+                ...order,
+                lines: order.lines.map(line =>
+                  line.id === lineId ? { ...line, unitPrice: price } : line
+                )
+              }
+            : order
+        ));
+        if (selectedOrder?.id === orderId) {
+          setSelectedOrder({
+            ...selectedOrder,
+            lines: selectedOrder.lines.map(line =>
+              line.id === lineId ? { ...line, unitPrice: price } : line
+            )
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update price:', error);
     }
   }
 
@@ -595,7 +653,9 @@ export default function AdminPage() {
 
   function calculateOrderTotalWithEditingWeights(order: Order) {
     return order.lines.reduce((total, line) => {
-      const unitPrice = line.unitPrice ? parseFloat(line.unitPrice.toString()) : 0;
+      const unitPrice = editingPrices[line.id] !== undefined 
+        ? editingPrices[line.id] 
+        : (line.unitPrice ? parseFloat(line.unitPrice.toString()) : 0);
       const quantity = editingWeights[line.id] !== undefined ? editingWeights[line.id] : (line.packedWeight || line.requestedQty);
       return total + (unitPrice * quantity);
     }, 0);
@@ -1265,13 +1325,18 @@ export default function AdminPage() {
                 <div className="bg-yellow-50 p-4 rounded-lg" data-weight-section>
                   <h4 className="font-semibold text-gray-800 mb-4">Tooted ja kaalud</h4>
                   <div className="space-y-4">
-                    {selectedOrder.lines.map((line) => (
+                    {selectedOrder.lines.map((line) => {
+                      const currentPrice = editingPrices[line.id] !== undefined 
+                        ? editingPrices[line.id] 
+                        : (line.unitPrice ? parseFloat(line.unitPrice.toString()) : 0);
+                      const currentWeight = editingWeights[line.id] !== undefined 
+                        ? editingWeights[line.id] 
+                        : (line.packedWeight || line.requestedQty);
+                      
+                      return (
                       <div key={line.id} className="flex items-center justify-between p-3 bg-white rounded border">
                         <div className="flex-1">
                           <p className="font-medium">{line.product.name}</p>
-                          <p className="text-sm text-gray-600">
-                            {line.unitPrice ? `${parseFloat(line.unitPrice.toString()).toFixed(2)}€/${line.uom.toLowerCase()}` : 'Hind puudub'}
-                          </p>
                         </div>
                         <div className="flex items-center space-x-4">
                           <div className="text-sm text-gray-600">
@@ -1283,7 +1348,7 @@ export default function AdminPage() {
                               type="number"
                               step="0.1"
                               placeholder="0"
-                              value={editingWeights[line.id] !== undefined ? editingWeights[line.id] : line.requestedQty}
+                              value={editingWeights[line.id] !== undefined ? editingWeights[line.id] : (line.packedWeight || line.requestedQty)}
                               onChange={(e) => {
                                 const value = e.target.value;
                                 if (value === '') {
@@ -1316,16 +1381,46 @@ export default function AdminPage() {
                             />
                             <span className="text-sm text-gray-600">{line.uom.toLowerCase()}</span>
                           </div>
-                          <div className="text-sm font-medium">
-                            {line.unitPrice ? 
-                              `${(parseFloat(line.unitPrice.toString()) * (editingWeights[line.id] !== undefined ? editingWeights[line.id] : line.requestedQty)).toFixed(2)}€` : 
-                              'Hind puudub'
-                            }
+                          <div className="flex items-center space-x-2">
+                            <label className="text-sm text-gray-600">Hind:</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              placeholder="0.00"
+                              value={editingPrices[line.id] !== undefined ? editingPrices[line.id] : (line.unitPrice ? parseFloat(line.unitPrice.toString()) : '')}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                  setEditingPrices({
+                                    ...editingPrices,
+                                    [line.id]: 0
+                                  });
+                                } else {
+                                  const normalizedValue = value.replace(',', '.');
+                                  const parsedValue = parseFloat(normalizedValue);
+                                  if (!isNaN(parsedValue)) {
+                                    setEditingPrices({
+                                      ...editingPrices,
+                                      [line.id]: parsedValue
+                                    });
+                                  }
+                                }
+                              }}
+                              className="w-24 p-2 border border-gray-300 rounded text-center"
+                            />
+                            <span className="text-sm text-gray-600">€/{line.uom.toLowerCase()}</span>
+                          </div>
+                          <div className="text-sm font-medium min-w-[80px]">
+                            {(currentPrice * currentWeight).toFixed(2)}€
                           </div>
                           <button
                             onClick={() => {
-                              const weight = editingWeights[line.id] !== undefined ? editingWeights[line.id] : line.requestedQty;
+                              const weight = editingWeights[line.id] !== undefined ? editingWeights[line.id] : (line.packedWeight || line.requestedQty);
+                              const price = editingPrices[line.id] !== undefined ? editingPrices[line.id] : (line.unitPrice ? parseFloat(line.unitPrice.toString()) : 0);
                               updatePackedWeights(selectedOrder.id, line.id, weight);
+                              if (price > 0) {
+                                updateOrderLinePrice(selectedOrder.id, line.id, price);
+                              }
                             }}
                             className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
                           >
@@ -1333,7 +1428,7 @@ export default function AdminPage() {
                           </button>
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </div>
 
