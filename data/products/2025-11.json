@@ -10,7 +10,11 @@
         { "id": "keskosa", "name": "Keskosa", "unit": "kg", "price_cents": 580 },
         { "id": "pool-siga", "name": "Pool siga", "unit": "kg", "price_cents": 385 },
         { "id": "terve-siga", "name": "Terve siga", "unit": "kg", "price_cents": 385 },
-        { "id": "porsas-grillimiseks", "name": "Põrsas grillimiseks/suitsutamiseks/lõkkel", "unit": "kg", "price_cents": 850 }
+        { "id": "porsas-grillimiseks", "name": "Põrsas grillimiseks/suitsutamiseks/lõkkel", "unit": "kg", "price_cents": 850 },
+        { "id": "esimese-veerandi-tukeldus", "name": "Esimese veerandi tükeldus", "unit": "tk", "price_cents": 400 },
+        { "id": "tagumise-veerandi-tukeldus", "name": "Tagumise veerandi tükeldus", "unit": "tk", "price_cents": 300 },
+        { "id": "poole-sea-tukeldus", "name": "Poole sea tükeldus", "unit": "tk", "price_cents": 600 },
+        { "id": "terve-sea-tukeldus", "name": "Terve sea tükeldus", "unit": "tk", "price_cents": 1000 }
       ]
     },
     {
