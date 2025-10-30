@@ -386,9 +386,18 @@ export default function OrderPage(){
                     <input placeholder="Nimi *" className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"
                       value={form.customer.name}
                       onChange={e=>setForm({...form, customer:{...form.customer, name:e.target.value}})} />
-                    <input placeholder="Telefon *" className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"
+                    <input 
+                      type="tel"
+                      placeholder="Telefon *" 
+                      className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"
                       value={form.customer.phone}
-                      onChange={e=>setForm({...form, customer:{...form.customer, phone:e.target.value}})} />
+                      onChange={e=>{
+                        const value = e.target.value.replace(/\D/g, ''); // Remove all non-digits
+                        setForm({...form, customer:{...form.customer, phone:value}});
+                      }}
+                      pattern="[0-9]*"
+                      inputMode="numeric"
+                    />
                     <input type="email" placeholder="E-post *" className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"
                       value={form.customer.email}
                       onChange={e=>setForm({...form, customer:{...form.customer, email:e.target.value}})} />
