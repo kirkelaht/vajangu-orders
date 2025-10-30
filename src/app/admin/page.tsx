@@ -259,7 +259,10 @@ export default function AdminPage() {
       </head>
       <body>
         <div class="header">
-          <h1>🐷 Vajangu Perefarm</h1>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+            <img src="/perefarm_logo.png" alt="Logo" style="width: 60px; height: 60px; object-fit: contain;" />
+            <h1>Vajangu Perefarm</h1>
+          </div>
           <h2>Tellimus ${order.id.slice(-8)}</h2>
           <p>Kuupäev: ${new Date(order.createdAt).toLocaleDateString('et-EE')}</p>
         </div>
