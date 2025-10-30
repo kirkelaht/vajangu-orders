@@ -82,9 +82,9 @@
     {
       "group": "Suitsutooted ja konservid",
       "products": [
-        { "id": "lihaste-viinerid", "name": "Lihased viinerid", "unit": "kg", "price_cents": 850 },
+        { "id": "lihaste-viinerid", "name": "Lihased viinerid", "unit": "kg", "price_cents": 750 },
         { "id": "kampaania-suitsusink", "name": "Kampaania suitsusink (väikese kondi ja kamaraga)", "unit": "kg", "price_cents": 895 },
-        { "id": "taisink-kamaraga", "name": "Taisink kamaraga", "unit": "kg", "price_cents": 1295 },
+        { "id": "taisink-kamaraga", "name": "Taisink kamaraga", "unit": "kg", "price_cents": 1195 },
         { "id": "taisink", "name": "Taisink", "unit": "kg", "price_cents": 1300 },
         { "id": "poolsuitsuvorst-kuuslauaga", "name": "Poolsuitsuvorst küüslauguga", "unit": "tk", "price_cents": 350 },
         { "id": "poolsuitsuvorst-juustuga", "name": "Poolsuitsuvorst juustuga", "unit": "tk", "price_cents": 350 },
