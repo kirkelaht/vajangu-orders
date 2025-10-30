@@ -949,7 +949,7 @@ export default function AdminPage() {
                       <div className="font-semibold text-gray-800 mb-3">{product.name}</div>
                       <div className="grid grid-cols-3 gap-4 items-end">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Hind (€)</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Kilohind (€/kg)</label>
                           <input
                             type="number"
                             step="0.01"
