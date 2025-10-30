@@ -232,6 +232,11 @@ export default function OrderPage(){
   // Custom ordering for Suitsutooted ja konservid
   const suitsutootedOrder = [
     'lihaste-viinerid',
+    'kampaania-suitsusink',
+    'taisink-kamaraga',
+    'taisink',
+    'poolsuitsuvorst-kuuslauaga',
+    'poolsuitsuvorst-juustuga',
     'tais-suitsuvorst',
     'sealiha-konserv-240g',
     'sealiha-konserv-12tk',
