@@ -383,13 +383,13 @@ export default function OrderPage(){
                   {/* Mandatory fields - Left side */}
                   <div className="space-y-4">
                     <h4 className="text-md font-medium text-gray-700 mb-3">Kohustuslikud andmed *</h4>
-                    <input placeholder="Nimi *" className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                    <input placeholder="Nimi *" className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"
                       value={form.customer.name}
                       onChange={e=>setForm({...form, customer:{...form.customer, name:e.target.value}})} />
-                    <input placeholder="Telefon *" className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                    <input placeholder="Telefon *" className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"
                       value={form.customer.phone}
                       onChange={e=>setForm({...form, customer:{...form.customer, phone:e.target.value}})} />
-                    <input type="email" placeholder="E-post *" className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                    <input type="email" placeholder="E-post *" className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"
                       value={form.customer.email}
                       onChange={e=>setForm({...form, customer:{...form.customer, email:e.target.value}})} />
                   </div>
@@ -397,10 +397,10 @@ export default function OrderPage(){
                   {/* Optional fields - Right side */}
                   <div className="space-y-4">
                     <h4 className="text-md font-medium text-gray-500 mb-3">Valikulised andmed</h4>
-                    <input placeholder="Ettevõtte nimi" className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                    <input placeholder="Ettevõtte nimi" className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"
                       value={form.customer.org_name}
                       onChange={e=>setForm({...form, customer:{...form.customer, org_name:e.target.value}})} />
-                    <input placeholder="Registrikood" className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                    <input placeholder="Registrikood" className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent text-black"
                       value={form.customer.reg_code}
                       onChange={e=>setForm({...form, customer:{...form.customer, reg_code:e.target.value}})} />
                   </div>
@@ -442,7 +442,7 @@ export default function OrderPage(){
                     <label className="block text-sm font-medium text-gray-700 mb-2">Tarneaadress *</label>
                     <textarea 
                       placeholder="Sisestage täpne tarneaadress (tänav, maja number, linn, postiindeks)"
-                      className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent h-20 resize-none"
+                      className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent h-20 resize-none text-black"
                       value={form.notes_customer}
                       onChange={e=>setForm({...form, notes_customer:e.target.value})}
                     />
@@ -660,7 +660,7 @@ export default function OrderPage(){
                   </label>
                   <textarea 
                     placeholder="Sisestage täiendav info tellimuse kohta (nt. erisoovid, kontaktinfo, jne.)"
-                    className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent h-20 resize-none"
+                    className="border border-gray-300 p-3 w-full rounded focus:ring-2 focus:ring-gray-500 focus:border-transparent h-20 resize-none text-black"
                     value={form.notes_internal}
                     onChange={e=>setForm({...form, notes_internal:e.target.value})}
                   />
