@@ -82,15 +82,15 @@
     {
       "group": "Suitsutooted ja konservid",
       "products": [
-        { "id": "lihaste-viinerid", "name": "Lihased viinerid", "unit": "kg", "price_cents": 750 },
+        { "id": "lihaste-viinerid", "name": "Lihased viinerid", "unit": "kg", "price_cents": 850 },
         { "id": "kampaania-suitsusink", "name": "Kampaania suitsusink (väikese kondi ja kamaraga)", "unit": "kg", "price_cents": 895 },
-        { "id": "taisink-kamaraga", "name": "Taisink kamaraga", "unit": "kg", "price_cents": 1195 },
+        { "id": "taisink-kamaraga", "name": "Taisink kamaraga", "unit": "kg", "price_cents": 1295 },
         { "id": "taisink", "name": "Taisink", "unit": "kg", "price_cents": 1300 },
         { "id": "poolsuitsuvorst-kuuslauaga", "name": "Poolsuitsuvorst küüslauguga", "unit": "tk", "price_cents": 350 },
         { "id": "poolsuitsuvorst-juustuga", "name": "Poolsuitsuvorst juustuga", "unit": "tk", "price_cents": 350 },
         { "id": "tais-suitsuvorst", "name": "Täissuitsuvorst sealihast", "unit": "tk", "price_cents": 500 },
-        { "id": "sealiha-konserv-240g", "name": "Sealiha konserv (240 g)", "unit": "tk", "price_cents": 230 },
-        { "id": "sealiha-konserv-12tk", "name": "Sealiha konserv (12 tk pakk)", "unit": "pakk", "price_cents": 2500 },
+        { "id": "sealiha-konserv-240g", "name": "Sealiha konserv (240 g)", "unit": "tk", "price_cents": 260 },
+        { "id": "sealiha-konserv-12tk", "name": "Sealiha konserv (12 tk pakk)", "unit": "pakk", "price_cents": 2900 },
         { "id": "seamaksa-pasteet-240g", "name": "Seamaksa pasteet (240 g)", "unit": "tk", "price_cents": 200 },
         { "id": "seamaksa-pasteet-12tk", "name": "Seamaksa pasteet (12 tk pakk)", "unit": "pakk", "price_cents": 2300 }
       ]
