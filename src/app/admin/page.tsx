@@ -515,6 +515,13 @@ export default function AdminPage() {
       });
     });
 
+    // Sort by product name (Toode column)
+    excelData.sort((a, b) => {
+      const productA = a['Toode'].toLowerCase();
+      const productB = b['Toode'].toLowerCase();
+      return productA.localeCompare(productB, 'et');
+    });
+
     const csvContent = [
       Object.keys(excelData[0] || {}).join(','),
       ...excelData.map(row => Object.values(row).join(','))
