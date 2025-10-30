@@ -70,6 +70,28 @@ export async function GET() {
       .map(([group, products]) => ({
         group,
         products: (products as any[]).sort((a,b) => {
+          // Custom sorting for Värske sealiha
+          if (group === "Värske sealiha") {
+            const order = [
+              'veerand-esimene',
+              'esimese-veerandi-tukeldus',
+              'veerand-tagumine',
+              'tagumise-veerandi-tukeldus',
+              'pool-siga',
+              'poole-sea-tukeldus',
+              'terve-siga',
+              'terve-sea-tukeldus',
+              'keskosa',
+              'rebitud-seakulg',
+              'porsas-grillimiseks',
+              'sealiha-1-16kg'
+            ];
+            const indexA = order.findIndex(pid => a.id === pid);
+            const indexB = order.findIndex(pid => b.id === pid);
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+            if (indexA !== -1) return -1;
+            if (indexB !== -1) return 1;
+          }
           // Custom sorting for Hakklihad: Seahakkliha first
           if (group === "Hakklihad") {
             if (a.name === "Seahakkliha") return -1;
