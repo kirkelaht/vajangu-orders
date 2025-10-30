@@ -873,7 +873,7 @@ export default function AdminPage() {
                 <img 
                   src="/perefarm_logo.png" 
                   alt="Vajangu Perefarm Logo" 
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain brightness-0 invert"
                 />
                 <span className="text-gray-800 font-bold text-xl hidden">🐷</span>
               </div>
