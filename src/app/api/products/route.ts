@@ -93,6 +93,27 @@ export async function GET() {
             if (indexA !== -1) return -1;
             if (indexB !== -1) return 1;
           }
+          // Custom sorting for Suitsutooted ja konservid
+          if (group === "Suitsutooted ja konservid") {
+            const order = [
+              'lihaste-viinerid',
+              'kampaania-suitsusink',
+              'taisink-kamaraga',
+              'taisink',
+              'poolsuitsuvorst-kuuslauaga',
+              'poolsuitsuvorst-juustuga',
+              'tais-suitsuvorst',
+              'sealiha-konserv-240g',
+              'sealiha-konserv-12tk',
+              'seamaksa-pasteet-240g',
+              'seamaksa-pasteet-12tk'
+            ];
+            const indexA = order.findIndex(pid => a.id === pid);
+            const indexB = order.findIndex(pid => b.id === pid);
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+            if (indexA !== -1) return -1;
+            if (indexB !== -1) return 1;
+          }
           // Custom sorting for Hakklihad: Seahakkliha first
           if (group === "Hakklihad") {
             if (a.name === "Seahakkliha") return -1;
