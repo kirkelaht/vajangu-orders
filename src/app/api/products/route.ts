@@ -82,6 +82,7 @@ export async function GET() {
               'terve-siga',
               'terve-sea-tukeldus',
               'keskosa',
+              'keskosa-tukeldus',
               'rebitud-seakulg',
               'porsas-grillimiseks',
               'sealiha-1-16kg'
