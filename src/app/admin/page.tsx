@@ -869,11 +869,11 @@ export default function AdminPage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
                 <img 
                   src="/perefarm_logo.png" 
                   alt="Vajangu Perefarm Logo" 
-                  className="w-full h-full object-contain brightness-0 invert"
+                  className="w-full h-full object-contain"
                 />
                 <span className="text-gray-800 font-bold text-xl hidden">🐷</span>
               </div>
