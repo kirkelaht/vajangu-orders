@@ -116,41 +116,60 @@ export async function POST(req: Request) {
     const existingInvoiceNumber = order.invoice_number || order.invoiceNumber;
     
     let invoiceNumber = existingInvoiceNumber;
+    let needsUpdate = false;
     
     if (!invoiceNumber) {
+      needsUpdate = true;
+      
       // Generate new invoice number
       const currentYear = new Date().getFullYear();
       const yearPrefix = currentYear.toString();
       
       // Find all invoice numbers for this year (not just one)
-      const { data: existingInvoices, error: invoiceQueryError } = await sb
+      // Handle both column name formats
+      const { data: existingInvoices1 } = await sb
         .from('Order')
         .select('invoice_number')
         .not('invoice_number', 'is', null)
         .like('invoice_number', `${yearPrefix}-%`);
+        
+      const { data: existingInvoices2 } = await sb
+        .from('Order')
+        .select('invoiceNumber')
+        .not('invoiceNumber', 'is', null)
+        .like('invoiceNumber', `${yearPrefix}-%`);
+
+      // Combine both results
+      const allInvoices: string[] = [];
+      if (existingInvoices1) {
+        existingInvoices1.forEach((inv: any) => {
+          if (inv.invoice_number) allInvoices.push(inv.invoice_number);
+        });
+      }
+      if (existingInvoices2) {
+        existingInvoices2.forEach((inv: any) => {
+          if (inv.invoiceNumber) allInvoices.push(inv.invoiceNumber);
+        });
+      }
 
       console.log('[admin/invoice] Existing invoices for this year:', {
-        count: existingInvoices?.length || 0,
-        error: invoiceQueryError,
-        sampleInvoices: existingInvoices?.slice(0, 5).map((inv: any) => inv.invoice_number)
+        count: allInvoices.length,
+        sampleInvoices: allInvoices.slice(0, 5)
       });
 
       // Find the highest number
       let maxNumber = 0;
-      if (existingInvoices && existingInvoices.length > 0) {
-        existingInvoices.forEach((inv: any) => {
-          const invNum = inv.invoice_number;
-          if (invNum && invNum.startsWith(yearPrefix)) {
-            const parts = invNum.split('-');
-            if (parts.length > 1) {
-              const num = parseInt(parts[1]);
-              if (!isNaN(num) && num > maxNumber) {
-                maxNumber = num;
-              }
+      allInvoices.forEach((invNum: string) => {
+        if (invNum && invNum.startsWith(yearPrefix)) {
+          const parts = invNum.split('-');
+          if (parts.length > 1) {
+            const num = parseInt(parts[1]);
+            if (!isNaN(num) && num > maxNumber) {
+              maxNumber = num;
             }
           }
-        });
-      }
+        }
+      });
 
       let nextNumber = maxNumber + 1;
       
@@ -161,15 +180,20 @@ export async function POST(req: Request) {
       while (!foundUnique && attempts < 10) {
         invoiceNumber = `${yearPrefix}-${nextNumber.toString().padStart(4, '0')}`;
         
-        // Check if this invoice number already exists
-        const { data: existing } = await sb
+        // Check if this invoice number already exists - check both column formats
+        const { data: existing1 } = await sb
           .from('Order')
           .select('id')
           .eq('invoice_number', invoiceNumber)
-          .limit(1)
-          .single();
+          .limit(1);
+          
+        const { data: existing2 } = await sb
+          .from('Order')
+          .select('id')
+          .eq('invoiceNumber', invoiceNumber)
+          .limit(1);
         
-        if (!existing) {
+        if ((!existing1 || existing1.length === 0) && (!existing2 || existing2.length === 0)) {
           foundUnique = true;
         } else {
           nextNumber++;
@@ -186,61 +210,81 @@ export async function POST(req: Request) {
       console.log('[admin/invoice] Generated invoice number:', invoiceNumber);
     } else {
       console.log('[admin/invoice] Order already has invoice number:', invoiceNumber);
+      // If order already has invoice number, we might still need to update status
+      needsUpdate = order.status !== 'INVOICED';
     }
 
-    // Update order with invoice number and status
-    // Determine which column format to use based on what exists in the order object
-    const hasCamelCase = 'invoiceNumber' in order || 'invoicedAt' in order;
-    const hasSnakeCase = 'invoice_number' in order || 'invoiced_at' in order;
-    
-    const updateData: any = {
-      status: 'INVOICED'
-    };
-    
-    // Use the format that exists in the database
-    if (hasSnakeCase) {
-      updateData.invoice_number = invoiceNumber;
-      updateData.invoiced_at = new Date().toISOString();
-    } else if (hasCamelCase) {
-      updateData.invoiceNumber = invoiceNumber;
-      updateData.invoicedAt = new Date().toISOString();
-    } else {
-      // Default to snake_case (most common after migration)
-      updateData.invoice_number = invoiceNumber;
-      updateData.invoiced_at = new Date().toISOString();
-    }
-    
-    console.log('[admin/invoice] Updating order with:', { 
-      orderId: trimmedOrderId,
-      invoiceNumber,
-      updateData: Object.keys(updateData),
-      hasCamelCase,
-      hasSnakeCase,
-      orderKeys: Object.keys(order).slice(0, 10) // First 10 keys for debugging
-    });
-    
-    const { error: updateError } = await sb
-      .from('Order')
-      .update(updateData)
-      .eq('id', trimmedOrderId);
-
-    if (updateError) {
-      console.error('[admin/invoice] Failed to update order:', {
-        error: updateError,
-        message: updateError.message,
-        details: updateError.details,
-        hint: updateError.hint,
-        code: updateError.code,
+    // Only update if we need to (new invoice number or status change)
+    if (needsUpdate) {
+      // Update order with invoice number and status
+      // Determine which column format to use based on what exists in the order object
+      const hasCamelCase = 'invoiceNumber' in order || 'invoicedAt' in order;
+      const hasSnakeCase = 'invoice_number' in order || 'invoiced_at' in order;
+      
+      const updateData: any = {
+        status: 'INVOICED'
+      };
+      
+      // Only add invoice number if we generated a new one
+      if (!existingInvoiceNumber) {
+        // Use the format that exists in the database
+        if (hasSnakeCase) {
+          updateData.invoice_number = invoiceNumber;
+          updateData.invoiced_at = new Date().toISOString();
+        } else if (hasCamelCase) {
+          updateData.invoiceNumber = invoiceNumber;
+          updateData.invoicedAt = new Date().toISOString();
+        } else {
+          // Default to snake_case (most common after migration)
+          updateData.invoice_number = invoiceNumber;
+          updateData.invoiced_at = new Date().toISOString();
+        }
+      } else {
+        // Just update the timestamp if invoice number already exists
+        if (hasSnakeCase) {
+          updateData.invoiced_at = new Date().toISOString();
+        } else if (hasCamelCase) {
+          updateData.invoicedAt = new Date().toISOString();
+        } else {
+          updateData.invoiced_at = new Date().toISOString();
+        }
+      }
+      
+      console.log('[admin/invoice] Updating order with:', { 
         orderId: trimmedOrderId,
-        updateData
+        invoiceNumber,
+        updateData: Object.keys(updateData),
+        hasCamelCase,
+        hasSnakeCase,
+        existingInvoiceNumber,
+        orderKeys: Object.keys(order).slice(0, 10) // First 10 keys for debugging
       });
-      return NextResponse.json({ 
-        ok: false, 
-        error: `Failed to update order: ${updateError.message || 'Unknown error'}` 
-      }, { status: 500 });
+      
+      const { error: updateError } = await sb
+        .from('Order')
+        .update(updateData)
+        .eq('id', trimmedOrderId);
+
+      if (updateError) {
+        console.error('[admin/invoice] Failed to update order:', {
+          error: updateError,
+          message: updateError.message,
+          details: updateError.details,
+          hint: updateError.hint,
+          code: updateError.code,
+          orderId: trimmedOrderId,
+          updateData
+        });
+        return NextResponse.json({ 
+          ok: false, 
+          error: `Failed to update order: ${updateError.message || 'Unknown error'}` 
+        }, { status: 500 });
+      }
+      
+      console.log('[admin/invoice] Order updated successfully with invoice number:', invoiceNumber);
+    } else {
+      console.log('[admin/invoice] Order already has invoice number, skipping update:', invoiceNumber);
     }
-    
-    console.log('[admin/invoice] Order updated successfully with invoice number:', invoiceNumber);
 
     // Fetch order lines with products
     const { data: lines } = await sb
