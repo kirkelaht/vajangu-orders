@@ -112,26 +112,81 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Stop not found" }, { status: 404 });
     }
 
-    // Generate invoice number
-    const currentYear = new Date().getFullYear();
-    const yearPrefix = currentYear.toString();
+    // Check if order already has an invoice number
+    const existingInvoiceNumber = order.invoice_number || order.invoiceNumber;
     
-    // Find the highest invoice number for this year
-    const { data: lastInvoice } = await sb
-      .from('Order')
-      .select('invoice_number')
-      .like('invoice_number', `${yearPrefix}-%`)
-      .order('invoice_number', { ascending: false })
-      .limit(1)
-      .single();
+    let invoiceNumber = existingInvoiceNumber;
+    
+    if (!invoiceNumber) {
+      // Generate new invoice number
+      const currentYear = new Date().getFullYear();
+      const yearPrefix = currentYear.toString();
+      
+      // Find all invoice numbers for this year (not just one)
+      const { data: existingInvoices, error: invoiceQueryError } = await sb
+        .from('Order')
+        .select('invoice_number')
+        .not('invoice_number', 'is', null)
+        .like('invoice_number', `${yearPrefix}-%`);
 
-    let nextNumber = 1;
-    if (lastInvoice?.invoice_number) {
-      const lastNumber = parseInt(lastInvoice.invoice_number.split('-')[1]);
-      nextNumber = lastNumber + 1;
+      console.log('[admin/invoice] Existing invoices for this year:', {
+        count: existingInvoices?.length || 0,
+        error: invoiceQueryError,
+        sampleInvoices: existingInvoices?.slice(0, 5).map((inv: any) => inv.invoice_number)
+      });
+
+      // Find the highest number
+      let maxNumber = 0;
+      if (existingInvoices && existingInvoices.length > 0) {
+        existingInvoices.forEach((inv: any) => {
+          const invNum = inv.invoice_number;
+          if (invNum && invNum.startsWith(yearPrefix)) {
+            const parts = invNum.split('-');
+            if (parts.length > 1) {
+              const num = parseInt(parts[1]);
+              if (!isNaN(num) && num > maxNumber) {
+                maxNumber = num;
+              }
+            }
+          }
+        });
+      }
+
+      let nextNumber = maxNumber + 1;
+      
+      // Try to find a unique invoice number (handle race conditions)
+      let attempts = 0;
+      let foundUnique = false;
+      
+      while (!foundUnique && attempts < 10) {
+        invoiceNumber = `${yearPrefix}-${nextNumber.toString().padStart(4, '0')}`;
+        
+        // Check if this invoice number already exists
+        const { data: existing } = await sb
+          .from('Order')
+          .select('id')
+          .eq('invoice_number', invoiceNumber)
+          .limit(1)
+          .single();
+        
+        if (!existing) {
+          foundUnique = true;
+        } else {
+          nextNumber++;
+          attempts++;
+        }
+      }
+      
+      if (!foundUnique) {
+        // Fallback: use timestamp
+        invoiceNumber = `${yearPrefix}-${Date.now().toString().slice(-6)}`;
+        console.warn('[admin/invoice] Could not find unique invoice number, using timestamp-based:', invoiceNumber);
+      }
+      
+      console.log('[admin/invoice] Generated invoice number:', invoiceNumber);
+    } else {
+      console.log('[admin/invoice] Order already has invoice number:', invoiceNumber);
     }
-
-    const invoiceNumber = `${yearPrefix}-${nextNumber.toString().padStart(4, '0')}`;
 
     // Update order with invoice number and status
     // Determine which column format to use based on what exists in the order object
