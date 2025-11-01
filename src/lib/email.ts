@@ -24,10 +24,12 @@ export async function sendOrderConfirmationEmail(
 ) {
   try {
     const sender = new Sender("no-reply@perefarm.ee", "Vajangu Perefarm");
+    const replyTo = new Sender("vajanguperefarm@gmail.com", "Vajangu Perefarm");
     const recipients = [new Recipient(customerEmail, customerName)];
 
     const emailParams = new EmailParams()
       .setFrom(sender)
+      .setReplyTo(replyTo)
       .setTo(recipients)
       .setSubject(`Tellimuse kinnitus - Vajangu Perefarm`)
       .setHtml(`
