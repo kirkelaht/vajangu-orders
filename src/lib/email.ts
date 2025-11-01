@@ -453,12 +453,14 @@ export async function sendAdminEmail(toEmail: string, subject: string, message: 
     const sender = new Sender("info@perefarm.ee", "Vajangu Perefarm");
     const recipients = [new Recipient(toEmail)];
 
+    const replyTo = new Sender("info@perefarm.ee", "Vajangu Perefarm");
+    
     const emailParams = new EmailParams()
       .setFrom(sender)
       .setTo(recipients)
       .setSubject(subject)
       .setText(message)
-      .setReplyTo("info@perefarm.ee"); // vastused lähevad siia postkasti
+      .setReplyTo(replyTo); // vastused lähevad siia postkasti
 
     // Validate API key before sending
     if (!process.env.MAILERSEND_API_KEY) {
