@@ -22,20 +22,50 @@ export async function POST(req: Request) {
 
     const sb = getSupabase();
 
-    // Fetch the order with all related data
+    // Fetch the order
     const { data: order, error: orderError } = await sb
       .from('Order')
-      .select(`
-        *,
-        Customer:customer_id (*),
-        Ring:ring_id (*),
-        Stop:stop_id (*)
-      `)
+      .select('*')
       .eq('id', orderId)
       .single();
 
     if (orderError || !order) {
+      console.error('[admin/invoice] Order not found:', orderError);
       return NextResponse.json({ ok: false, error: "Order not found" }, { status: 404 });
+    }
+
+    // Fetch related data separately
+    const { data: customer, error: customerError } = await sb
+      .from('Customer')
+      .select('*')
+      .eq('id', order.customerId || order.customer_id)
+      .single();
+
+    const { data: ring, error: ringError } = await sb
+      .from('Ring')
+      .select('*')
+      .eq('id', order.ringId || order.ring_id)
+      .single();
+
+    const { data: stop, error: stopError } = await sb
+      .from('Stop')
+      .select('*')
+      .eq('id', order.stopId || order.stop_id)
+      .single();
+
+    if (customerError || !customer) {
+      console.error('[admin/invoice] Customer not found:', customerError);
+      return NextResponse.json({ ok: false, error: "Customer not found" }, { status: 404 });
+    }
+
+    if (ringError || !ring) {
+      console.error('[admin/invoice] Ring not found:', ringError);
+      return NextResponse.json({ ok: false, error: "Ring not found" }, { status: 404 });
+    }
+
+    if (stopError || !stop) {
+      console.error('[admin/invoice] Stop not found:', stopError);
+      return NextResponse.json({ ok: false, error: "Stop not found" }, { status: 404 });
     }
 
     // Generate invoice number
@@ -120,23 +150,23 @@ export async function POST(req: Request) {
         const invoiceDate = new Date();
 
         const emailResult = await sendInvoiceEmail(
-          order.Customer.email,
-          order.Customer.name,
+          customer.email,
+          customer.name,
           invoiceNumber,
           {
             orderId: order.id,
             orderDate: orderDate,
             invoiceDate: invoiceDate,
             customer: {
-              name: order.Customer.name,
-              email: order.Customer.email,
-              phone: order.Customer.phone || ''
+              name: customer.name,
+              email: customer.email,
+              phone: customer.phone || ''
             },
-            ring: order.Ring.region,
-            stop: order.Stop.name,
-            deliveryType: order.delivery_type === 'HOME' ? 'HOME' : 'STOP',
-            deliveryAddress: order.delivery_address || undefined,
-            paymentMethod: order.payment_method === 'TRANSFER' ? 'TRANSFER' : 'CASH',
+            ring: ring.region,
+            stop: stop.name,
+            deliveryType: (order.deliveryType || order.delivery_type) === 'HOME' ? 'HOME' : 'STOP',
+            deliveryAddress: (order.deliveryAddress || order.delivery_address) || undefined,
+            paymentMethod: (order.paymentMethod || order.payment_method) === 'TRANSFER' ? 'TRANSFER' : 'CASH',
             products: products,
             subtotal: subtotal,
             vatAmount: vatAmount,
