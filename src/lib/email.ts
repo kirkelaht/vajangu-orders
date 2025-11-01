@@ -1,4 +1,19 @@
 import { MailerSend, EmailParams, Sender, Recipient } from 'mailersend';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+// Load logo as base64 from public directory
+const logoBase64 = (() => {
+  try {
+    const logoPath = join(process.cwd(), 'public', 'perefarm_logo.png');
+    const logoBuffer = readFileSync(logoPath);
+    return `data:image/png;base64,${logoBuffer.toString('base64')}`;
+  } catch (error) {
+    console.error('Failed to load logo:', error);
+    // Fallback to URL if file read fails
+    return 'https://perefarm.ee/perefarm_logo.png';
+  }
+})();
 
 export const mailerSend = new MailerSend({
   apiKey: process.env.MAILERSEND_API_KEY || '',
@@ -65,7 +80,7 @@ export async function sendOrderConfirmationEmail(
         <body>
           <div class="container">
             <div class="header">
-              <img src="https://perefarm.ee/perefarm_logo.png" alt="Vajangu Perefarm Logo" class="logo" />
+              <img src="${logoBase64}" alt="Vajangu Perefarm Logo" class="logo" />
               <h2>Aitäh, Teie tellimus on vastu võetud!</h2>
             </div>
             
@@ -224,7 +239,7 @@ export async function sendInvoiceEmail(
         <body>
           <div class="container">
             <div class="header">
-              <img src="https://perefarm.ee/perefarm_logo.png" alt="Vajangu Perefarm Logo" class="logo" />
+              <img src="${logoBase64}" alt="Vajangu Perefarm Logo" class="logo" />
               <h2>Arve ${invoiceNumber}</h2>
             </div>
             
@@ -375,7 +390,7 @@ export async function sendCustomEmail(
         <body>
           <div class="container">
             <div class="header">
-              <img src="https://perefarm.ee/perefarm_logo.png" alt="Vajangu Perefarm Logo" class="logo" />
+              <img src="${logoBase64}" alt="Vajangu Perefarm Logo" class="logo" />
               <h2>Vajangu Perefarm</h2>
             </div>
             
