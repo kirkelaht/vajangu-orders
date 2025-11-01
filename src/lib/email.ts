@@ -445,3 +445,35 @@ Vajangu Perefarm meeskond
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
+
+// Funktsioon admin-lehe kirjade saatmiseks
+export async function sendAdminEmail(toEmail: string, subject: string, message: string) {
+  try {
+    // Aadress, millelt kiri läheb välja
+    const sender = new Sender("info@perefarm.ee", "Vajangu Perefarm");
+    const recipients = [new Recipient(toEmail)];
+
+    const emailParams = new EmailParams()
+      .setFrom(sender)
+      .setTo(recipients)
+      .setSubject(subject)
+      .setText(message)
+      .setReplyTo("info@perefarm.ee"); // vastused lähevad siia postkasti
+
+    // Validate API key before sending
+    if (!process.env.MAILERSEND_API_KEY) {
+      console.error('MailerSend API key not configured');
+      return { success: false, error: 'MailerSend API key not configured' };
+    }
+
+    const response = await mailerSend.email.send(emailParams);
+    console.log("✅ Admin email sent successfully");
+    return { 
+      success: true, 
+      messageId: (response as any)?.body?.message_id || (response as { messageId?: string })?.messageId || 'unknown' 
+    };
+  } catch (err) {
+    console.error("❌ sendAdminEmail failed:", err);
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
+  }
+}
