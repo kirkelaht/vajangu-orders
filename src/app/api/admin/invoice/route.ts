@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from '@supabase/supabase-js';
-// import { sendInvoiceEmail } from "@/lib/email";
+import { sendInvoiceEmail } from "@/lib/email";
 
 function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -94,17 +94,66 @@ export async function POST(req: Request) {
     const vatAmount = subtotal * vatRate;
     const total = subtotal + vatAmount;
 
-    // TODO: Send invoice email when email service is set up
-    // try {
-    //   await sendInvoiceEmail(
-    //     order.Customer.email,
-    //     order.Customer.name,
-    //     invoiceNumber,
-    //     { ... }
-    //   );
-    // } catch (emailError) {
-    //   console.error('Failed to send invoice email:', emailError);
-    // }
+    // Send invoice email
+    try {
+      if (!process.env.MAILERSEND_API_KEY) {
+        console.log('[admin/invoice] MailerSend API key not configured - skipping email');
+      } else {
+        // Build products array for email
+        const products = (lines || []).map((line: any) => {
+          const unitPrice = line.unit_price ? Number(line.unit_price) : 0;
+          const quantity = Number(line.packed_weight || line.packed_qty || line.requested_qty);
+          const lineTotal = unitPrice * quantity;
+          
+          return {
+            name: line.Product?.name || line.product_sku || 'Unknown product',
+            sku: line.product_sku,
+            quantity: quantity,
+            uom: line.uom?.toLowerCase() || 'kg',
+            unitPrice: unitPrice,
+            lineTotal: lineTotal
+          };
+        });
+
+        // Parse dates
+        const orderDate = order.created_at ? new Date(order.created_at) : new Date();
+        const invoiceDate = new Date();
+
+        const emailResult = await sendInvoiceEmail(
+          order.Customer.email,
+          order.Customer.name,
+          invoiceNumber,
+          {
+            orderId: order.id,
+            orderDate: orderDate,
+            invoiceDate: invoiceDate,
+            customer: {
+              name: order.Customer.name,
+              email: order.Customer.email,
+              phone: order.Customer.phone || ''
+            },
+            ring: order.Ring.region,
+            stop: order.Stop.name,
+            deliveryType: order.delivery_type === 'HOME' ? 'HOME' : 'STOP',
+            deliveryAddress: order.delivery_address || undefined,
+            paymentMethod: order.payment_method === 'TRANSFER' ? 'TRANSFER' : 'CASH',
+            products: products,
+            subtotal: subtotal,
+            vatAmount: vatAmount,
+            total: total
+          }
+        );
+
+        if (emailResult.success) {
+          console.log('[admin/invoice] Invoice email sent successfully to:', order.Customer.email, 'Message ID:', emailResult.messageId);
+        } else {
+          console.error('[admin/invoice] Failed to send invoice email:', emailResult.error);
+        }
+      }
+    } catch (emailError) {
+      console.error('[admin/invoice] Exception in invoice email sending:', emailError);
+      // Don't fail invoice generation if email fails
+    }
 
     return NextResponse.json({ 
       ok: true, 

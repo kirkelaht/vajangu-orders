@@ -209,6 +209,7 @@ export async function sendInvoiceEmail(
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
             .header { background: #f8f9fa; padding: 20px; text-align: center; border-radius: 8px; }
+            .logo { max-width: 120px; height: auto; margin-bottom: 10px; }
             .invoice-header { display: flex; justify-content: space-between; margin: 20px 0; }
             .invoice-details { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; }
             .products-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
@@ -223,7 +224,7 @@ export async function sendInvoiceEmail(
         <body>
           <div class="container">
             <div class="header">
-              <h1>🐷 Vajangu Perefarm</h1>
+              <img src="https://perefarm.ee/perefarm_logo.png" alt="Vajangu Perefarm Logo" class="logo" />
               <h2>Arve ${invoiceNumber}</h2>
             </div>
             
