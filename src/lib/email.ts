@@ -365,6 +365,7 @@ export async function sendCustomEmail(
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
             .header { background: #f8f9fa; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 20px; }
+            .logo { max-width: 120px; height: auto; margin-bottom: 10px; }
             .content { padding: 20px 0; }
             .order-info { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; }
             .message { white-space: pre-wrap; margin: 20px 0; }
@@ -374,7 +375,8 @@ export async function sendCustomEmail(
         <body>
           <div class="container">
             <div class="header">
-              <h1>🐷 Vajangu Perefarm</h1>
+              <img src="https://perefarm.ee/perefarm_logo.png" alt="Vajangu Perefarm Logo" class="logo" />
+              <h2>Vajangu Perefarm</h2>
             </div>
             
             <div class="content">
@@ -389,7 +391,7 @@ export async function sendCustomEmail(
                 <p><strong>Peatus:</strong> ${orderDetails.stop}</p>
               </div>
               
-              <p>Kui teil on küsimusi, võtke meiega ühendust.</p>
+              <p>Kui teil on küsimusi, võtke meiega ühendust telefonil 5358 6772</p>
               
               <p>Parimate soovidega,<br>
               Vajangu Perefarm meeskond</p>
