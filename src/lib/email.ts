@@ -1,6 +1,6 @@
 import { MailerSend, EmailParams, Sender, Recipient } from 'mailersend';
 
-const mailerSend = new MailerSend({
+export const mailerSend = new MailerSend({
   apiKey: process.env.MAILERSEND_API_KEY || '',
 });
 
@@ -23,7 +23,7 @@ export async function sendOrderConfirmationEmail(
   }
 ) {
   try {
-    const sender = new Sender("vajanguperefarm@gmail.com", "Vajangu Perefarm");
+    const sender = new Sender("no-reply@perefarm.ee", "Vajangu Perefarm");
     const recipients = [new Recipient(customerEmail, customerName)];
 
     const emailParams = new EmailParams()
@@ -168,11 +168,13 @@ export async function sendInvoiceEmail(
   }
 ) {
   try {
-    const sender = new Sender("vajanguperefarm@gmail.com", "Vajangu Perefarm");
+    const sender = new Sender("no-reply@perefarm.ee", "Vajangu Perefarm");
+    const replyTo = new Sender("vajanguperefarm@gmail.com", "Vajangu Perefarm");
     const recipients = [new Recipient(customerEmail, customerName)];
 
     const emailParams = new EmailParams()
       .setFrom(sender)
+      .setReplyTo(replyTo)
       .setTo(recipients)
       .setSubject(`Arve ${invoiceNumber} - Vajangu Perefarm`)
       .setHtml(`
@@ -321,11 +323,13 @@ export async function sendCustomEmail(
   }
 ) {
   try {
-    const sender = new Sender("vajanguperefarm@gmail.com", "Vajangu Perefarm");
+    const sender = new Sender("no-reply@perefarm.ee", "Vajangu Perefarm");
+    const replyTo = new Sender("vajanguperefarm@gmail.com", "Vajangu Perefarm");
     const recipients = [new Recipient(customerEmail, customerName)];
 
     const emailParams = new EmailParams()
       .setFrom(sender)
+      .setReplyTo(replyTo)
       .setTo(recipients)
       .setSubject(subject)
       .setHtml(`
