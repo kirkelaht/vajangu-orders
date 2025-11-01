@@ -2,6 +2,55 @@ import { NextResponse } from "next/server";
 import { createClient } from '@supabase/supabase-js';
 import { sendInvoiceEmail } from "@/lib/email";
 
+// Fallback function if database sequence is not available
+async function generateInvoiceNumberFallback(sb: any): Promise<string> {
+  const currentYear = new Date().getFullYear();
+  const yearPrefix = currentYear.toString();
+  
+  // Find all invoice numbers for this year
+  const { data: existingInvoices1 } = await sb
+    .from('Order')
+    .select('invoice_number')
+    .not('invoice_number', 'is', null)
+    .like('invoice_number', `${yearPrefix}-%`);
+    
+  const { data: existingInvoices2 } = await sb
+    .from('Order')
+    .select('invoiceNumber')
+    .not('invoiceNumber', 'is', null)
+    .like('invoiceNumber', `${yearPrefix}-%`);
+
+  // Combine both results
+  const allInvoices: string[] = [];
+  if (existingInvoices1) {
+    existingInvoices1.forEach((inv: any) => {
+      if (inv.invoice_number) allInvoices.push(inv.invoice_number);
+    });
+  }
+  if (existingInvoices2) {
+    existingInvoices2.forEach((inv: any) => {
+      if (inv.invoiceNumber) allInvoices.push(inv.invoiceNumber);
+    });
+  }
+
+  // Find the highest number
+  let maxNumber = 0;
+  allInvoices.forEach((invNum: string) => {
+    if (invNum && invNum.startsWith(yearPrefix)) {
+      const parts = invNum.split('-');
+      if (parts.length > 1) {
+        const num = parseInt(parts[1]);
+        if (!isNaN(num) && num > maxNumber) {
+          maxNumber = num;
+        }
+      }
+    }
+  });
+
+  const nextNumber = maxNumber + 1;
+  return `${yearPrefix}-${nextNumber.toString().padStart(4, '0')}`;
+}
+
 function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -121,93 +170,25 @@ export async function POST(req: Request) {
     if (!invoiceNumber) {
       needsUpdate = true;
       
-      // Generate new invoice number
-      const currentYear = new Date().getFullYear();
-      const yearPrefix = currentYear.toString();
-      
-      // Find all invoice numbers for this year (not just one)
-      // Handle both column name formats
-      const { data: existingInvoices1 } = await sb
-        .from('Order')
-        .select('invoice_number')
-        .not('invoice_number', 'is', null)
-        .like('invoice_number', `${yearPrefix}-%`);
+      // Use database function to generate invoice number atomically
+      // This prevents race conditions and ensures uniqueness
+      try {
+        const { data: invoiceData, error: functionError } = await sb
+          .rpc('get_next_invoice_number');
         
-      const { data: existingInvoices2 } = await sb
-        .from('Order')
-        .select('invoiceNumber')
-        .not('invoiceNumber', 'is', null)
-        .like('invoiceNumber', `${yearPrefix}-%`);
-
-      // Combine both results
-      const allInvoices: string[] = [];
-      if (existingInvoices1) {
-        existingInvoices1.forEach((inv: any) => {
-          if (inv.invoice_number) allInvoices.push(inv.invoice_number);
-        });
-      }
-      if (existingInvoices2) {
-        existingInvoices2.forEach((inv: any) => {
-          if (inv.invoiceNumber) allInvoices.push(inv.invoiceNumber);
-        });
-      }
-
-      console.log('[admin/invoice] Existing invoices for this year:', {
-        count: allInvoices.length,
-        sampleInvoices: allInvoices.slice(0, 5)
-      });
-
-      // Find the highest number
-      let maxNumber = 0;
-      allInvoices.forEach((invNum: string) => {
-        if (invNum && invNum.startsWith(yearPrefix)) {
-          const parts = invNum.split('-');
-          if (parts.length > 1) {
-            const num = parseInt(parts[1]);
-            if (!isNaN(num) && num > maxNumber) {
-              maxNumber = num;
-            }
-          }
-        }
-      });
-
-      let nextNumber = maxNumber + 1;
-      
-      // Try to find a unique invoice number (handle race conditions)
-      let attempts = 0;
-      let foundUnique = false;
-      
-      while (!foundUnique && attempts < 10) {
-        invoiceNumber = `${yearPrefix}-${nextNumber.toString().padStart(4, '0')}`;
-        
-        // Check if this invoice number already exists - check both column formats
-        const { data: existing1 } = await sb
-          .from('Order')
-          .select('id')
-          .eq('invoice_number', invoiceNumber)
-          .limit(1);
-          
-        const { data: existing2 } = await sb
-          .from('Order')
-          .select('id')
-          .eq('invoiceNumber', invoiceNumber)
-          .limit(1);
-        
-        if ((!existing1 || existing1.length === 0) && (!existing2 || existing2.length === 0)) {
-          foundUnique = true;
+        if (functionError) {
+          // If function doesn't exist, fall back to manual generation
+          console.warn('[admin/invoice] Database function not available, using fallback:', functionError.message);
+          invoiceNumber = await generateInvoiceNumberFallback(sb);
         } else {
-          nextNumber++;
-          attempts++;
+          invoiceNumber = invoiceData;
+          console.log('[admin/invoice] Generated invoice number via database function:', invoiceNumber);
         }
+      } catch (err) {
+        // Fallback if RPC fails
+        console.warn('[admin/invoice] RPC call failed, using fallback:', err);
+        invoiceNumber = await generateInvoiceNumberFallback(sb);
       }
-      
-      if (!foundUnique) {
-        // Fallback: use timestamp
-        invoiceNumber = `${yearPrefix}-${Date.now().toString().slice(-6)}`;
-        console.warn('[admin/invoice] Could not find unique invoice number, using timestamp-based:', invoiceNumber);
-      }
-      
-      console.log('[admin/invoice] Generated invoice number:', invoiceNumber);
     } else {
       console.log('[admin/invoice] Order already has invoice number:', invoiceNumber);
       // If order already has invoice number, we might still need to update status
