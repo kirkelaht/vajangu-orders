@@ -197,15 +197,24 @@ export async function POST(req: Request) {
       .eq('order_id', orderId);
 
     // Calculate totals
-    const subtotal = (lines || []).reduce((total: number, line: any) => {
+    // VAT is already included in prices (24%), so we need to calculate backwards
+    const vatRate = 0.24; // 24% VAT
+    
+    // Total price with VAT included
+    const totalWithVat = (lines || []).reduce((total: number, line: any) => {
       const unitPrice = line.unit_price ? Number(line.unit_price) : 0;
       const quantity = Number(line.packed_weight || line.packed_qty || line.requested_qty);
       return total + (unitPrice * quantity);
     }, 0);
-
-    const vatRate = 0.20; // 20% VAT
-    const vatAmount = subtotal * vatRate;
-    const total = subtotal + vatAmount;
+    
+    // Calculate subtotal without VAT: total / (1 + VAT rate)
+    const subtotal = totalWithVat / (1 + vatRate);
+    
+    // VAT amount = total - subtotal
+    const vatAmount = totalWithVat - subtotal;
+    
+    // Total (with VAT) = what we already calculated
+    const total = totalWithVat;
 
     // Send invoice email
     try {

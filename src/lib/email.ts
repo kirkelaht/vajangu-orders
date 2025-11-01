@@ -247,6 +247,10 @@ export async function sendInvoiceEmail(
               <div>
                 <h3>Müüja:</h3>
                 <p>Vajangu Perefarm OÜ<br>
+                Registrikood: 16109182<br>
+                KMKR: EE102313446<br>
+                Aadress: Lõõtspilli 2, Rakvere, Estonia<br>
+                Juriidiline aadress: Lääne-Viru maakond, Tapa vald, Vajangu küla, Rammo tee 3, 46002<br>
                 E-posti: info@perefarm.ee<br>
                 Telefon: 5358 6772</p>
               </div>
@@ -298,12 +302,15 @@ export async function sendInvoiceEmail(
                 <span>${invoiceDetails.subtotal.toFixed(2)}€</span>
               </div>
               <div class="total-line">
-                <span>Käibemaks (20%):</span>
+                <span>Käibemaks (24%, sisse arvatud):</span>
                 <span>${invoiceDetails.vatAmount.toFixed(2)}€</span>
               </div>
               <div class="total-line total-final">
                 <span>Kokku (käibemaksuga):</span>
                 <span>${invoiceDetails.total.toFixed(2)}€</span>
+              </div>
+              <div class="total-line" style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                <span>* Kõik hinnad sisaldavad käibemaksu (24%)</span>
               </div>
             </div>
             
@@ -319,6 +326,10 @@ export async function sendInvoiceEmail(
 Arve ${invoiceNumber} - Vajangu Perefarm
 
 Müüja: Vajangu Perefarm OÜ
+Registrikood: 16109182
+KMKR: EE102313446
+Aadress: Lõõtspilli 2, Rakvere, Estonia
+Juriidiline aadress: Lääne-Viru maakond, Tapa vald, Vajangu küla, Rammo tee 3, 46002
 E-posti: info@perefarm.ee
 Telefon: 5358 6772
 
@@ -334,7 +345,7 @@ Tooted:
 ${invoiceDetails.products.map(product => `- ${product.name} (${product.sku}): ${product.quantity} ${product.uom} × ${product.unitPrice.toFixed(2)}€ = ${product.lineTotal.toFixed(2)}€`).join('\n')}
 
 Kokku (ilma käibemaksuta): ${invoiceDetails.subtotal.toFixed(2)}€
-Käibemaks (20%): ${invoiceDetails.vatAmount.toFixed(2)}€
+Käibemaks (24%, sisse arvatud): ${invoiceDetails.vatAmount.toFixed(2)}€
 Kokku (käibemaksuga): ${invoiceDetails.total.toFixed(2)}€
 
 Vajangu Perefarm | Kõrgekvaliteediline kodumaine sealiha
