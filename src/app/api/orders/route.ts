@@ -228,10 +228,10 @@ export async function POST(req: Request) {
           console.error('[api/orders] Failed to fetch stop for email:', stopError);
           // Continue anyway - don't fail order if we can't fetch stop
         } else {
-          // Fetch order lines
+          // Fetch order lines with prices
           const { data: orderLines, error: linesFetchError } = await sb
             .from('OrderLine')
-            .select('productSku, requestedQty, uom')
+            .select('productSku, requestedQty, uom, unitPrice')
             .eq('orderId', order.id);
 
           if (!linesFetchError && orderLines && orderLines.length > 0) {
@@ -250,10 +250,16 @@ export async function POST(req: Request) {
                   name: product?.name || line.productSku || 'Unknown product',
                   sku: line.productSku,
                   quantity: line.requestedQty,
-                  uom: line.uom?.toLowerCase() || 'kg'
+                  uom: line.uom?.toLowerCase() || 'kg',
+                  unitPrice: line.unitPrice ? parseFloat(line.unitPrice.toString()) : undefined
                 };
               })
             );
+
+            // Calculate total
+            const total = products.reduce((sum, product) => {
+              return sum + (product.unitPrice ? product.unitPrice * product.quantity : 0);
+            }, 0);
 
             console.log('[api/orders] Sending confirmation email to:', b.customer.email);
             
@@ -268,7 +274,8 @@ export async function POST(req: Request) {
                 deliveryType: isHomeDelivery ? 'HOME' : 'STOP',
                 deliveryAddress: isHomeDelivery ? b.notes_customer : undefined,
                 paymentMethod: b.payment_method === "ülekandega" ? 'TRANSFER' : 'CASH',
-                products: products
+                products: products,
+                total: total
               }
             );
 

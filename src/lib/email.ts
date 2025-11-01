@@ -19,13 +19,24 @@ export async function sendOrderConfirmationEmail(
       sku: string;
       quantity: number;
       uom: string;
+      unitPrice?: number;
     }>;
+    total?: number;
   }
 ) {
   try {
     const sender = new Sender("no-reply@perefarm.ee", "Vajangu Perefarm");
     const replyTo = new Sender("vajanguperefarm@gmail.com", "Vajangu Perefarm");
     const recipients = [new Recipient(customerEmail, customerName)];
+
+    // Calculate total if not provided
+    let total = orderDetails.total;
+    if (total === undefined && orderDetails.products.length > 0) {
+      total = orderDetails.products.reduce((sum, product) => {
+        return sum + (product.unitPrice ? product.unitPrice * product.quantity : 0);
+      }, 0);
+    }
+    const totalDisplay = total !== undefined && total > 0 ? total.toFixed(2) : null;
 
     const emailParams = new EmailParams()
       .setFrom(sender)
@@ -42,16 +53,19 @@ export async function sendOrderConfirmationEmail(
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
             .header { background: #f8f9fa; padding: 20px; text-align: center; border-radius: 8px; }
+            .logo { max-width: 120px; height: auto; margin-bottom: 10px; }
             .content { padding: 20px 0; }
             .order-details { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; }
             .product-item { padding: 8px 0; border-bottom: 1px solid #eee; }
+            .product-item:last-child { border-bottom: none; }
+            .total { font-size: 1.2em; font-weight: bold; color: #28a745; margin-top: 15px; padding-top: 15px; border-top: 2px solid #28a745; }
             .footer { text-align: center; color: #666; font-size: 14px; margin-top: 30px; }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="header">
-              <h1>🐷 Vajangu Perefarm</h1>
+              <img src="https://perefarm.ee/perefarm_logo.png" alt="Vajangu Perefarm Logo" class="logo" />
               <h2>Aitäh, Teie tellimus on vastu võetud!</h2>
             </div>
             
@@ -77,11 +91,13 @@ export async function sendOrderConfirmationEmail(
                   <div class="product-item">
                     <strong>${product.name}</strong> (${product.sku})<br>
                     Kogus: ${product.quantity} ${product.uom.toLowerCase()}
+                    ${product.unitPrice ? `<br>Hind: ${product.unitPrice.toFixed(2)}€/${product.uom.toLowerCase()} = ${(product.unitPrice * product.quantity).toFixed(2)}€` : ''}
                   </div>
                 `).join('')}
+                ${totalDisplay ? `<div class="total">Kokku: ${totalDisplay}€</div>` : ''}
               </div>
               
-              <p>Kui teil on küsimusi, võtke meiega ühendust telefonil või e-posti teel.</p>
+              <p>Kui teil on küsimusi, võtke meiega ühendust telefonil 5358 6772</p>
               
               <p>Parimate soovidega,<br>
               Vajangu Perefarm meeskond</p>
@@ -106,9 +122,13 @@ ${orderDetails.deliveryAddress ? `- Tarneaadress: ${orderDetails.deliveryAddress
 - Maksemeetod: ${orderDetails.paymentMethod === 'TRANSFER' ? 'Ülekandega' : 'Sularaha'}
 
 Tellitud tooted:
-${orderDetails.products.map(product => `- ${product.name} (${product.sku}): ${product.quantity} ${product.uom.toLowerCase()}`).join('\n')}
+${orderDetails.products.map(product => {
+  const lineTotal = product.unitPrice ? product.unitPrice * product.quantity : null;
+  return `- ${product.name} (${product.sku}): ${product.quantity} ${product.uom.toLowerCase()}${product.unitPrice ? ` × ${product.unitPrice.toFixed(2)}€ = ${lineTotal!.toFixed(2)}€` : ''}`;
+}).join('\n')}
+${totalDisplay ? `\nKokku: ${totalDisplay}€` : ''}
 
-Kui teil on küsimusi, võtke meiega ühendust.
+Kui teil on küsimusi, võtke meiega ühendust telefonil 5358 6772
 
 Parimate soovidega,
 Vajangu Perefarm meeskond
