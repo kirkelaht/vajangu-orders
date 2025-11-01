@@ -246,9 +246,9 @@ export async function sendInvoiceEmail(
             <div class="invoice-header">
               <div>
                 <h3>Müüja:</h3>
-                <p>Vajangu Perefarm<br>
+                <p>Vajangu Perefarm OÜ<br>
                 E-posti: info@perefarm.ee<br>
-                Telefon: +372 XXX XXXX</p>
+                Telefon: 5358 6772</p>
               </div>
               <div>
                 <h3>Ostja:</h3>
@@ -318,8 +318,9 @@ export async function sendInvoiceEmail(
       .setText(`
 Arve ${invoiceNumber} - Vajangu Perefarm
 
-Müüja: Vajangu Perefarm
+Müüja: Vajangu Perefarm OÜ
 E-posti: info@perefarm.ee
+Telefon: 5358 6772
 
 Ostja: ${invoiceDetails.customer.name}
 ${invoiceDetails.customer.email}

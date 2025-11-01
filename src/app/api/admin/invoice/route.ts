@@ -134,19 +134,58 @@ export async function POST(req: Request) {
     const invoiceNumber = `${yearPrefix}-${nextNumber.toString().padStart(4, '0')}`;
 
     // Update order with invoice number and status
+    // Determine which column format to use based on what exists in the order object
+    const hasCamelCase = 'invoiceNumber' in order || 'invoicedAt' in order;
+    const hasSnakeCase = 'invoice_number' in order || 'invoiced_at' in order;
+    
+    const updateData: any = {
+      status: 'INVOICED'
+    };
+    
+    // Use the format that exists in the database
+    if (hasSnakeCase) {
+      updateData.invoice_number = invoiceNumber;
+      updateData.invoiced_at = new Date().toISOString();
+    } else if (hasCamelCase) {
+      updateData.invoiceNumber = invoiceNumber;
+      updateData.invoicedAt = new Date().toISOString();
+    } else {
+      // Default to snake_case (most common after migration)
+      updateData.invoice_number = invoiceNumber;
+      updateData.invoiced_at = new Date().toISOString();
+    }
+    
+    console.log('[admin/invoice] Updating order with:', { 
+      orderId: trimmedOrderId,
+      invoiceNumber,
+      updateData: Object.keys(updateData),
+      hasCamelCase,
+      hasSnakeCase,
+      orderKeys: Object.keys(order).slice(0, 10) // First 10 keys for debugging
+    });
+    
     const { error: updateError } = await sb
       .from('Order')
-      .update({
-        invoice_number: invoiceNumber,
-        status: 'INVOICED',
-        invoiced_at: new Date().toISOString()
-      })
-      .eq('id', orderId);
+      .update(updateData)
+      .eq('id', trimmedOrderId);
 
     if (updateError) {
-      console.error('[admin/invoice] Failed to update order:', updateError);
-      return NextResponse.json({ ok: false, error: "Failed to update order" }, { status: 500 });
+      console.error('[admin/invoice] Failed to update order:', {
+        error: updateError,
+        message: updateError.message,
+        details: updateError.details,
+        hint: updateError.hint,
+        code: updateError.code,
+        orderId: trimmedOrderId,
+        updateData
+      });
+      return NextResponse.json({ 
+        ok: false, 
+        error: `Failed to update order: ${updateError.message || 'Unknown error'}` 
+      }, { status: 500 });
     }
+    
+    console.log('[admin/invoice] Order updated successfully with invoice number:', invoiceNumber);
 
     // Fetch order lines with products
     const { data: lines } = await sb
