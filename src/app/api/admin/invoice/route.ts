@@ -146,7 +146,7 @@ export async function POST(req: Request) {
         });
 
         // Parse dates
-        const orderDate = order.created_at ? new Date(order.created_at) : new Date();
+        const orderDate = (order.createdAt || order.created_at) ? new Date(order.createdAt || order.created_at) : new Date();
         const invoiceDate = new Date();
 
         const emailResult = await sendInvoiceEmail(
@@ -175,7 +175,7 @@ export async function POST(req: Request) {
         );
 
         if (emailResult.success) {
-          console.log('[admin/invoice] Invoice email sent successfully to:', order.Customer.email, 'Message ID:', emailResult.messageId);
+          console.log('[admin/invoice] Invoice email sent successfully to:', customer.email, 'Message ID:', emailResult.messageId);
         } else {
           console.error('[admin/invoice] Failed to send invoice email:', emailResult.error);
         }
