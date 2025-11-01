@@ -16,6 +16,8 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { orderId } = body;
 
+    console.log('[admin/invoice] Received request with orderId:', orderId);
+
     if (!orderId) {
       return NextResponse.json({ ok: false, error: "Order ID is required" }, { status: 400 });
     }
@@ -29,29 +31,52 @@ export async function POST(req: Request) {
       .eq('id', orderId)
       .single();
 
+    console.log('[admin/invoice] Order query result:', { 
+      hasOrder: !!order, 
+      error: orderError,
+      orderId: order?.id,
+      customerId: order?.customerId || order?.customer_id
+    });
+
     if (orderError || !order) {
-      console.error('[admin/invoice] Order not found:', orderError);
-      return NextResponse.json({ ok: false, error: "Order not found" }, { status: 404 });
+      console.error('[admin/invoice] Order not found. Error:', orderError, 'OrderId:', orderId);
+      return NextResponse.json({ ok: false, error: `Order not found: ${orderError?.message || 'Unknown error'}` }, { status: 404 });
     }
 
     // Fetch related data separately
+    // Handle both camelCase and snake_case column names
+    const customerId = order.customerId || order.customer_id;
+    const ringId = order.ringId || order.ring_id;
+    const stopId = order.stopId || order.stop_id;
+
+    console.log('[admin/invoice] Fetching related data:', { customerId, ringId, stopId });
+
     const { data: customer, error: customerError } = await sb
       .from('Customer')
       .select('*')
-      .eq('id', order.customerId || order.customer_id)
+      .eq('id', customerId)
       .single();
 
     const { data: ring, error: ringError } = await sb
       .from('Ring')
       .select('*')
-      .eq('id', order.ringId || order.ring_id)
+      .eq('id', ringId)
       .single();
 
     const { data: stop, error: stopError } = await sb
       .from('Stop')
       .select('*')
-      .eq('id', order.stopId || order.stop_id)
+      .eq('id', stopId)
       .single();
+
+    console.log('[admin/invoice] Related data fetch results:', {
+      hasCustomer: !!customer,
+      customerError,
+      hasRing: !!ring,
+      ringError,
+      hasStop: !!stop,
+      stopError
+    });
 
     if (customerError || !customer) {
       console.error('[admin/invoice] Customer not found:', customerError);
