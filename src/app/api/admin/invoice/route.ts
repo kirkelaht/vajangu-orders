@@ -24,24 +24,43 @@ export async function POST(req: Request) {
 
     const sb = getSupabase();
 
-    // Fetch the order
-    const { data: order, error: orderError } = await sb
+    // Trim orderId to handle any whitespace issues
+    const trimmedOrderId = orderId?.toString().trim();
+    
+    console.log('[admin/invoice] Attempting to fetch order:', trimmedOrderId);
+
+    // Fetch the order - try without .single() first to see what we get
+    const { data: orders, error: orderListError } = await sb
       .from('Order')
       .select('*')
-      .eq('id', orderId)
-      .single();
+      .eq('id', trimmedOrderId);
 
-    console.log('[admin/invoice] Order query result:', { 
-      hasOrder: !!order, 
-      error: orderError,
-      orderId: order?.id,
-      customerId: order?.customerId || order?.customer_id
+    console.log('[admin/invoice] Order list query result:', { 
+      count: orders?.length || 0,
+      error: orderListError,
+      orderIds: orders?.map((o: any) => o.id)
     });
 
-    if (orderError || !order) {
-      console.error('[admin/invoice] Order not found. Error:', orderError, 'OrderId:', orderId);
-      return NextResponse.json({ ok: false, error: `Order not found: ${orderError?.message || 'Unknown error'}` }, { status: 404 });
+    if (orderListError) {
+      console.error('[admin/invoice] Order query failed:', orderListError);
+      return NextResponse.json({ ok: false, error: `Order query failed: ${orderListError.message}` }, { status: 500 });
     }
+
+    if (!orders || orders.length === 0) {
+      console.error('[admin/invoice] Order not found. Searched for orderId:', trimmedOrderId);
+      // Try to see if any orders exist at all
+      const { count } = await sb.from('Order').select('*', { count: 'exact', head: true });
+      console.log('[admin/invoice] Total orders in database:', count);
+      return NextResponse.json({ ok: false, error: `Order not found with ID: ${trimmedOrderId}` }, { status: 404 });
+    }
+
+    const order = orders[0];
+    console.log('[admin/invoice] Order found:', { 
+      orderId: order.id,
+      customerId: order.customerId || order.customer_id,
+      ringId: order.ringId || order.ring_id,
+      stopId: order.stopId || order.stop_id
+    });
 
     // Fetch related data separately
     // Handle both camelCase and snake_case column names
